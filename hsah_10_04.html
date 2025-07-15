@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garofalo-Ligorio Comparison - OpenSeadragon Viewer</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin: 0;
+        }
+        
+        .viewer-container {
+            display: flex;
+            gap: 20px;
+            height: 700px;
+        }
+        
+        .main-viewer {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .controls {
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .manifest-selector {
+            margin-bottom: 20px;
+        }
+        
+        .manifest-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .manifest-selector select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .info-panel {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .info-panel h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #5d6d7e;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background: #2980b9;
+        }
+        
+        .metadata {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+        
+        #openseadragon {
+            width: 100%;
+            height: 100%;
+            background: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pirro Ligorio e la cultura antiquaria</h1>
+        <p>Confronto: Garofalo e Ligorio - Dal Trionfo di Bacco ai disegni derivati</p>
+    </div>
+    
+    <div class="viewer-container">
+        <div class="main-viewer">
+            <div id="openseadragon"></div>
+        </div>
+        
+        <div class="controls">
+            <h3>Controlli Visualizzatore</h3>
+            
+            <div class="manifest-selector">
+                <label for="manifestSelect">Seleziona Layout:</label>
+                <select id="manifestSelect">
+                    <option value="https://liladude.github.io/Manifest_server/comparison-fig4.json">Composizione Completa</option>
+                    <option value="https://liladude.github.io/Manifest_server/simplified-composition.json">Layout Semplificato</option>
+                    <option value="https://liladude.github.io/Manifest_server/basic-garofalo-ligorio.json">Sequenza Singola</option>
+                </select>
+            </div>
+            
+            <button class="button" onclick="loadManifest()">Carica Manifest</button>
+            <button class="button" onclick="resetView()">Reset Vista</button>
+            <button class="button" onclick="goHome()">Vista Completa</button>
+            <button class="button" onclick="fitComparison()">Adatta Confronto</button>
+            
+            <div class="info-panel">
+                <h4>Informazioni</h4>
+                <p><strong>Stato:</strong> <span id="status">Seleziona un manifest</span></p>
+                <p><strong>Immagini:</strong> <span id="imageCount">-</span></p>
+                <p><strong>Dimensioni:</strong> <span id="dimensions">-</span></p>
+                <div class="metadata">
+                    <p><strong>Zoom:</strong> Rotella del mouse o doppio click</p>
+                    <p><strong>Pan:</strong> Trascina per spostarti</p>
+                    <p><strong>Reset:</strong> Tasto destro del mouse</p>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h4>Descrizione</h4>
+                <p>Analisi visiva della trasformazione del modello raffaellesco attraverso Garofalo fino alle rielaborazioni grafiche di Pirro Ligorio a Ferrara.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+    <script>
+        let viewer;
+        let currentManifest = null;
+        
+        // Initialize OpenSeadragon
+        function initializeViewer() {
+            viewer = OpenSeadragon({
+                id: "openseadragon",
+                prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+                showNavigator: true,
+                navigatorPosition: "TOP_RIGHT",
+                showNavigationControl: true,
+                navigationControlAnchor: OpenSeadragon.ControlAnchor.TOP_LEFT,
+                showZoomControl: true,
+                showHomeControl: true,
+                showFullPageControl: true,
+                zoomInButton: "zoom-in",
+                zoomOutButton: "zoom-out",
+                homeButton: "home",
+                fullPageButton: "full-page",
+                animationTime: 1.2,
+                blendTime: 0.1,
+                constrainDuringPan: true,
+                maxZoomPixelRatio: 2,
+                minZoomLevel: 0.8,
+                visibilityRatio: 1,
+                zoomPerScroll: 2,
+                showRotationControl: true,
+                gestureSettingsMouse: {
+                    scrollToZoom: true,
+                    clickToZoom: true,
+                    dblClickToZoom: true,
+                    pinchToZoom: true,
+                    flickEnabled: true,
+                    pinchRotate: false
+                }
+            });
+            
+            viewer.addHandler('open', function() {
+                document.getElementById('status').textContent = 'Manifest caricato con successo';
+                updateImageInfo();
+            });
+            
+            viewer.addHandler('open-failed', function(event) {
+                document.getElementById('status').textContent = 'Errore nel caricamento';
+                showError('Errore nel caricamento del manifest: ' + event.message);
+            });
+        }
+        
+        // Load IIIF manifest
+        async function loadManifest() {
+            const manifestUrl = document.getElementById('manifestSelect').value;
+            document.getElementById('status').textContent = 'Caricamento...';
+            
+            try {
+                const response = await fetch(manifestUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const manifest = await response.json();
+                currentManifest = manifest;
+                
+                console.log('Manifest loaded:', manifest);
+                
+                // Determine manifest type and handle accordingly
+                if (manifest.items && manifest.items.length > 0) {
+                    
+                    // Check if it's a multi-canvas manifest (like basic-garofalo-ligorio.json)
+                    if (manifest.items.length > 1) {
+                        handleMultiCanvasManifest(manifest);
+                    } else {
+                        // Single canvas manifest
+                        const canvas = manifest.items[0];
+                        handleSingleCanvasManifest(canvas);
+                    }
+                } else {
+                    throw new Error('No items found in manifest');
+                }
+                
+            } catch (error) {
+                console.error('Error loading manifest:', error);
+                showError('Errore nel caricamento del manifest: ' + error.message);
+                document.getElementById('status').textContent = 'Errore nel caricamento';
+            }
+        }
+        
+        // Handle multi-canvas manifests (sequential images)
+        function handleMultiCanvasManifest(manifest) {
+            console.log('Handling multi-canvas manifest');
+            
+            // For multi-canvas, we'll show the first canvas and add navigation
+            const firstCanvas = manifest.items[0];
+            const tileSources = [];
+            
+            // Extract all canvases as separate tile sources
+            manifest.items.forEach((canvas, index) => {
+                if (canvas.items && canvas.items[0] && canvas.items[0].items && canvas.items[0].items[0]) {
+                    const annotation = canvas.items[0].items[0];
+                    const body = annotation.body;
+                    
+                    const tileSource = {
+                        "@context": "http://iiif.io/api/image/2/context.json",
+                        "@id": body.service ? body.service[0].id : body.id,
+                        "protocol": "http://iiif.io/api/image",
+                        "width": body.width || canvas.width,
+                        "height": body.height || canvas.height,
+                        "profile": ["http://iiif.io/api/image/2/level2.json"]
+                    };
+                    
+                    tileSources.push(tileSource);
+                }
+            });
+            
+            // Open with first tile source
+            if (tileSources.length > 0) {
+                viewer.open(tileSources[0]);
+                
+                // Add navigation for multiple canvases
+                if (tileSources.length > 1) {
+                    addCanvasNavigation(tileSources, manifest.items);
+                }
+            }
+        }
+        
+        // Handle single canvas manifests (composition or simple layout)
+        function handleSingleCanvasManifest(canvas) {
+            console.log('Handling single canvas manifest');
+            
+            if (canvas.items && canvas.items[0] && canvas.items[0].items) {
+                const annotations = canvas.items[0].items;
+                
+                // Check if it's a composition (multiple annotations) or simple single image
+                if (annotations.length > 1) {
+                    // Multiple annotations - composition layout
+                    handleCompositionLayout(annotations, canvas);
+                } else {
+                    // Single annotation - simple image
+                    handleSimpleImage(annotations[0], canvas);
+                }
+            }
+        }
+        
+        // Handle composition layout (multiple positioned images)
+        function handleCompositionLayout(annotations, canvas) {
+            console.log('Handling composition layout with', annotations.length, 'annotations');
+            
+            const tileSources = annotations.map(annotation => {
+                const body = annotation.body;
+                const target = annotation.target;
+                
+                let tileSource = {
+                    "@context": "http://iiif.io/api/image/2/context.json",
+                    "@id": body.service ? body.service[0].id : body.id,
+                    "protocol": "http://iiif.io/api/image",
+                    "width": body.width || canvas.width,
+                    "height": body.height || canvas.height,
+                    "profile": ["http://iiif.io/api/image/2/level2.json"]
+                };
+                
+                // Handle positioning if present
+                if (target && typeof target === 'object' && target.id && target.id.includes('#xywh=')) {
+                    const xywh = target.id.split('#xywh=')[1];
+                    const [x, y, w, h] = xywh.split(',').map(Number);
+                    
+                    return {
+                        tileSource: tileSource,
+                        x: x / canvas.width,
+                        y: y / canvas.height,
+                        width: w / canvas.width,
+                        height: h / canvas.height
+                    };
+                }
+                
+                return tileSource;
+            });
+            
+            viewer.open(tileSources);
+        }
+        
+        // Handle simple single image
+        function handleSimpleImage(annotation, canvas) {
+            console.log('Handling simple image');
+            
+            const body = annotation.body;
+            
+            const tileSource = {
+                "@context": "http://iiif.io/api/image/2/context.json",
+                "@id": body.service ? body.service[0].id : body.id,
+                "protocol": "http://iiif.io/api/image",
+                "width": body.width || canvas.width,
+                "height": body.height || canvas.height,
+                "profile": ["http://iiif.io/api/image/2/level2.json"]
+            };
+            
+            viewer.open(tileSource);
+        }
+        
+        // Add navigation for multi-canvas manifests
+        function addCanvasNavigation(tileSources, canvases) {
+            let currentIndex = 0;
+            
+            const navDiv = document.createElement('div');
+            navDiv.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 1000;';
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '◀ Precedente';
+            prevBtn.style.cssText = 'margin-right: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Successivo ▶';
+            nextBtn.style.cssText = 'margin-left: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            
+            const counter = document.createElement('span');
+            counter.textContent = `1 / ${tileSources.length}`;
+            counter.style.cssText = 'margin: 0 10px; font-weight: bold;';
+            
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size: 12px; text-align: center; margin-bottom: 5px;';
+            title.textContent = canvases[0].label ? (canvases[0].label.it || canvases[0].label.en || canvases[0].label) : 'Immagine 1';
+            
+            navDiv.appendChild(title);
+            navDiv.appendChild(prevBtn);
+            navDiv.appendChild(counter);
+            navDiv.appendChild(nextBtn);
+            
+            document.getElementById('openseadragon').appendChild(navDiv);
+            
+            function updateNavigation() {
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex === tileSources.length - 1;
+                counter.textContent = `${currentIndex + 1} / ${tileSources.length}`;
+                
+                const canvas = canvases[currentIndex];
+                title.textContent = canvas.label ? (canvas.label.it || canvas.label.en || canvas.label) : `Immagine ${currentIndex + 1}`;
+                
+                prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+                nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    viewer.open(tileSources[currentIndex]);
+                    updateNavigation();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentIndex < tileSources.length - 1) {
+                    currentIndex++;
+                    viewer.open(tileSources[currentIndex]);
+                    updateNavigation();
+                }
+            });
+            
+            updateNavigation();
+        }
+        
+        function updateImageInfo() {
+            if (currentManifest && currentManifest.items) {
+                const canvas = currentManifest.items[0];
+                const imageCount = canvas.items && canvas.items[0] ? canvas.items[0].items.length : 1;
+                
+                document.getElementById('imageCount').textContent = imageCount;
+                document.getElementById('dimensions').textContent = `${canvas.width} × ${canvas.height}`;
+            }
+        }
+        
+        function resetView() {
+            if (viewer) {
+                viewer.viewport.goHome();
+            }
+        }
+        
+        function goHome() {
+            if (viewer) {
+                viewer.viewport.goHome();
+            }
+        }
+        
+        function fitComparison() {
+            if (viewer) {
+                // Force fit to entire canvas for comparison viewing
+                viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, 1, 1), true);
+                // Set a comfortable zoom level for comparison
+                setTimeout(() => {
+                    viewer.viewport.zoomBy(0.9);
+                }, 100);
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.controls').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeViewer();
+            
+            // Load default manifest
+            setTimeout(() => {
+                loadManifest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

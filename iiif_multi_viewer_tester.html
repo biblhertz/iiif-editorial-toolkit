@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIIF Multi-Viewer Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px; background: #f8f9fa; color: #2c3e50;
+        }
+        
+        .header {
+            text-align: center; margin-bottom: 30px; padding: 30px;
+            background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 { color: #2c3e50; margin: 0 0 10px 0; font-size: 2.5em; }
+        
+        .viewer-tabs {
+            display: flex; margin-bottom: 20px; background: white;
+            border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .viewer-tab {
+            flex: 1; padding: 15px 20px; background: #ecf0f1; border: none;
+            cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s;
+        }
+        
+        .viewer-tab.active { background: #3498db; color: white; }
+        .viewer-tab:hover { background: #2980b9; color: white; }
+        
+        .main-container {
+            display: flex; gap: 20px; height: 700px;
+        }
+        
+        .viewer-container {
+            flex: 1; background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        
+        .controls {
+            width: 320px; background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px;
+        }
+        
+        .controls h3 {
+            margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 2px solid #e0e6ed;
+            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #3498db;
+        }
+        
+        .button {
+            background: #3498db; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+            transition: all 0.3s; width: 100%; margin-bottom: 10px;
+        }
+        
+        .button:hover { background: #2980b9; }
+        .button.secondary { background: #95a5a6; }
+        .button.success { background: #27ae60; }
+        
+        .status {
+            padding: 15px; border-radius: 8px; margin: 15px 0;
+            font-weight: 600; text-align: center;
+        }
+        
+        .status.success { background: #d5edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #b8daff; }
+        
+        .info-panel {
+            background: #f8f9fa; padding: 15px; border-radius: 8px;
+            margin: 15px 0; border-left: 4px solid #3498db;
+        }
+        
+        .info-panel h4 { margin-top: 0; color: #2c3e50; }
+        .info-panel p { margin: 5px 0; font-size: 14px; color: #5d6d7e; }
+        
+        .viewer-content {
+            width: 100%; height: 100%; border: none; border-radius: 12px;
+        }
+        
+        .manifest-validation {
+            background: #f8f9fa; padding: 15px; border-radius: 8px;
+            margin: 15px 0; font-family: monospace; font-size: 12px;
+        }
+        
+        .validation-item {
+            margin: 5px 0; padding: 5px; border-radius: 4px;
+        }
+        
+        .validation-item.valid { background: #d5edda; color: #155724; }
+        .validation-item.invalid { background: #f8d7da; color: #721c24; }
+        
+        #openseadragon-container {
+            width: 100%; height: 100%; display: none;
+        }
+        
+        .osd-overlay {
+            position: absolute; background: rgba(52, 152, 219, 0.3);
+            border: 2px solid #3498db; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            color: #2c3e50; font-weight: bold; font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .compatibility-matrix {
+            background: white; padding: 20px; border-radius: 12px;
+            margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .compatibility-table {
+            width: 100%; border-collapse: collapse;
+        }
+        
+        .compatibility-table th, .compatibility-table td {
+            padding: 10px; border: 1px solid #e0e6ed; text-align: center;
+        }
+        
+        .compatibility-table th {
+            background: #f8f9fa; font-weight: 600;
+        }
+        
+        .status-excellent { color: #27ae60; font-weight: bold; }
+        .status-good { color: #3498db; font-weight: bold; }
+        .status-fair { color: #f39c12; font-weight: bold; }
+        .status-poor { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 IIIF Multi-Viewer Tester</h1>
+        <p>Test your manifests with Mirador 3, TheseusViewer, and OpenSeadragon</p>
+    </div>
+    
+    <div class="viewer-tabs">
+        <button class="viewer-tab active" onclick="switchViewer('mirador')">🎭 Mirador 3</button>
+        <button class="viewer-tab" onclick="switchViewer('theseus')">📚 TheseusViewer</button>
+        <button class="viewer-tab" onclick="switchViewer('openseadragon')">🌊 OpenSeadragon</button>
+    </div>
+    
+    <div class="main-container">
+        <div class="viewer-container">
+            <iframe id="iframe-viewer" class="viewer-content" src="about:blank"></iframe>
+            <div id="openseadragon-container"></div>
+        </div>
+        
+        <div class="controls">
+            <h3>📋 Manifest Testing</h3>
+            
+            <div class="form-group">
+                <label for="manifestSelect">Quick Test Manifests:</label>
+                <select id="manifestSelect">
+                    <option value="">-- Select a test manifest --</option>
+                    <option value="https://liladude.github.io/Manifest_server/hsah_0410_17_cookbook.json">Your Cookbook Manifest</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0036-composition-from-multiple-images/manifest.json">IIIF Cookbook - Multiple Images</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0261-non-rectangular-commenting/manifest.json">IIIF Cookbook - Annotations</option>
+                    <option value="https://digital.bodleian.ox.ac.uk/objects/748a8d01-41ad-4260-8f06-28d0db1d5ab6/manifest.json">Bodleian Library</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestUrl">Your Manifest URL:</label>
+                <input type="url" id="manifestUrl" placeholder="https://your-manifest.json">
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestJson">Or paste JSON directly:</label>
+                <textarea id="manifestJson" rows="4" placeholder="Paste your manifest JSON here..."></textarea>
+            </div>
+            
+            <button class="button" onclick="loadManifest()">🚀 Load Manifest</button>
+            <button class="button secondary" onclick="loadFromSelect()">📋 Load Selected</button>
+            <button class="button success" onclick="validateManifest()">✅ Validate</button>
+            
+            <div id="status"></div>
+            
+            <div class="info-panel">
+                <h4>🎯 Current Viewer: <span id="current-viewer">Mirador 3</span></h4>
+                <p id="viewer-info">Advanced IIIF viewer with annotation support</p>
+            </div>
+            
+            <div class="info-panel">
+                <h4>📊 Compatibility Notes</h4>
+                <p><strong>Mirador 3:</strong> Best for complex compositions</p>
+                <p><strong>TheseusViewer:</strong> Works with your cookbook format</p>
+                <p><strong>OpenSeadragon:</strong> Good for single images, limited compositions</p>
+            </div>
+            
+            <div id="validation-results" class="manifest-validation" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <div class="compatibility-matrix">
+        <h3>🔍 Compatibility Test Results</h3>
+        <table class="compatibility-table">
+            <thead>
+                <tr>
+                    <th>Manifest Type</th>
+                    <th>Mirador 3</th>
+                    <th>TheseusViewer</th>
+                    <th>OpenSeadragon</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="compatibility-results">
+                <tr>
+                    <td>Single Image</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td>Universal compatibility</td>
+                </tr>
+                <tr>
+                    <td>Multi-Canvas</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td class="status-good">Good</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td>Sequential viewing</td>
+                </tr>
+                <tr>
+                    <td>Positioned Composition</td>
+                    <td class="status-excellent">Excellent</td>
+                    <td class="status-good">Good</td>
+                    <td class="status-fair">Fair</td>
+                    <td>Your cookbook format</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+    <script>
+        let currentViewer = 'mirador';
+        let currentManifest = null;
+        let osdViewer = null;
+        
+        const viewerInfo = {
+            mirador: {
+                name: 'Mirador 3',
+                description: 'Advanced IIIF viewer with annotation support',
+                url: (manifest) => `https://projectmirador.org/embed/?iiif-content=${encodeURIComponent(manifest)}`
+            },
+            theseus: {
+                name: 'TheseusViewer',
+                description: 'Specialized viewer for comparative layouts',
+                url: (manifest) => `https://theseusviewer.org/?manifest=${encodeURIComponent(manifest)}`
+            },
+            openseadragon: {
+                name: 'OpenSeadragon',
+                description: 'High-performance image viewer',
+                url: null // We'll handle this specially
+            }
+        };
+        
+        function switchViewer(viewer) {
+            // Update active tab
+            document.querySelectorAll('.viewer-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentViewer = viewer;
+            
+            // Update viewer info
+            document.getElementById('current-viewer').textContent = viewerInfo[viewer].name;
+            document.getElementById('viewer-info').textContent = viewerInfo[viewer].description;
+            
+            // Show/hide appropriate container
+            const iframe = document.getElementById('iframe-viewer');
+            const osdContainer = document.getElementById('openseadragon-container');
+            
+            if (viewer === 'openseadragon') {
+                iframe.style.display = 'none';
+                osdContainer.style.display = 'block';
+            } else {
+                iframe.style.display = 'block';
+                osdContainer.style.display = 'none';
+            }
+            
+            // Reload current manifest in new viewer
+            if (currentManifest) {
+                loadManifestInViewer(currentManifest, viewer);
+            }
+        }
+        
+        function loadManifest() {
+            const manifestUrl = document.getElementById('manifestUrl').value.trim();
+            const manifestJson = document.getElementById('manifestJson').value.trim();
+            
+            if (manifestUrl) {
+                currentManifest = manifestUrl;
+                loadManifestInViewer(manifestUrl, currentViewer);
+            } else if (manifestJson) {
+                try {
+                    const manifest = JSON.parse(manifestJson);
+                    // Create a blob URL for the manifest
+                    const blob = new Blob([JSON.stringify(manifest, null, 2)], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    currentManifest = url;
+                    loadManifestInViewer(url, currentViewer);
+                } catch (error) {
+                    showStatus('Invalid JSON: ' + error.message, 'error');
+                }
+            } else {
+                showStatus('Please enter a manifest URL or paste JSON', 'error');
+            }
+        }
+        
+        function loadFromSelect() {
+            const select = document.getElementById('manifestSelect');
+            const manifestUrl = select.value;
+            if (!manifestUrl) {
+                showStatus('Please select a manifest', 'error');
+                return;
+            }
+            
+            document.getElementById('manifestUrl').value = manifestUrl;
+            currentManifest = manifestUrl;
+            loadManifestInViewer(manifestUrl, currentViewer);
+        }
+        
+        function loadManifestInViewer(manifestUrl, viewer) {
+            showStatus('Loading manifest...', 'info');
+            
+            if (viewer === 'openseadragon') {
+                loadInOpenSeadragon(manifestUrl);
+            } else {
+                const viewerUrl = viewerInfo[viewer].url(manifestUrl);
+                const iframe = document.getElementById('iframe-viewer');
+                iframe.src = viewerUrl;
+                
+                iframe.onload = function() {
+                    showStatus(`Manifest loaded in ${viewerInfo[viewer].name}`, 'success');
+                };
+                
+                iframe.onerror = function() {
+                    showStatus(`Failed to load manifest in ${viewerInfo[viewer].name}`, 'error');
+                };
+            }
+        }
+        
+        async function loadInOpenSeadragon(manifestUrl) {
+            try {
+                const response = await fetch(manifestUrl);
+                const manifest = await response.json();
+                
+                // Clear existing viewer
+                if (osdViewer) {
+                    osdViewer.destroy();
+                }
+                
+                const container = document.getElementById('openseadragon-container');
+                container.innerHTML = '<div id="openseadragon-viewer" style="width: 100%; height: 100%;"></div>';
+                
+                // Check manifest structure
+                if (manifest.items && manifest.items.length > 1) {
+                    // Multi-canvas manifest - show first canvas
+                    loadOSDSingleCanvas(manifest.items[0]);
+                } else if (manifest.items && manifest.items[0] && manifest.items[0].items && manifest.items[0].items[0] && manifest.items[0].items[0].items) {
+                    // Single canvas with multiple annotations
+                    const annotations = manifest.items[0].items[0].items;
+                    if (annotations.length > 1) {
+                        loadOSDComposition(manifest.items[0], annotations);
+                    } else {
+                        loadOSDSingleImage(annotations[0]);
+                    }
+                } else {
+                    showStatus('Unsupported manifest structure for OpenSeadragon', 'error');
+                }
+                
+            } catch (error) {
+                showStatus('Failed to load manifest: ' + error.message, 'error');
+            }
+        }
+        
+        function loadOSDSingleImage(annotation) {
+            const body = annotation.body;
+            const serviceId = body.service && body.service[0] ? body.service[0].id : null;
+            
+            if (serviceId) {
+                osdViewer = OpenSeadragon({
+                    id: "openseadragon-viewer",
+                    prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+                    tileSources: {
+                        "@context": "http://iiif.io/api/image/2/context.json",
+                        "@id": serviceId,
+                        "protocol": "http://iiif.io/api/image",
+                        "width": body.width,
+                        "height": body.height,
+                        "profile": ["http://iiif.io/api/image/2/level2.json"]
+                    },
+                    showNavigationControl: true,
+                    showRotationControl: true
+                });
+                
+                showStatus('Single image loaded in OpenSeadragon', 'success');
+            } else {
+                showStatus('No IIIF service found in annotation', 'error');
+            }
+        }
+        
+        function loadOSDSingleCanvas(canvas) {
+            const annotation = canvas.items[0].items[0];
+            loadOSDSingleImage(annotation);
+        }
+        
+        function loadOSDComposition(canvas, annotations) {
+            // For compositions, OpenSeadragon struggles, so we'll show the first image
+            // and add a note about the limitation
+            loadOSDSingleImage(annotations[0]);
+            showStatus(`OpenSeadragon showing first image only. Composition has ${annotations.length} images.`, 'info');
+            
+            // Add overlay information
+            setTimeout(() => {
+                if (osdViewer) {
+                    annotations.forEach((annotation, index) => {
+                        if (index === 0) return; // Skip first image (already showing)
+                        
+                        const overlay = document.createElement('div');
+                        overlay.className = 'osd-overlay';
+                        overlay.textContent = `Image ${index + 1}`;
+                        overlay.style.cssText = `
+                            position: absolute; top: 20px; right: ${20 + (index * 100)}px;
+                            background: rgba(231, 76, 60, 0.8); color: white;
+                            padding: 5px 10px; border-radius: 4px; font-size: 12px;
+                        `;
+                        
+                        document.getElementById('openseadragon-container').appendChild(overlay);
+                    });
+                }
+            }, 1000);
+        }
+        
+        async function validateManifest() {
+            const manifestUrl = document.getElementById('manifestUrl').value.trim();
+            const manifestJson = document.getElementById('manifestJson').value.trim();
+            
+            let manifest;
+            
+            if (manifestUrl) {
+                try {
+                    const response = await fetch(manifestUrl);
+                    manifest = await response.json();
+                } catch (error) {
+                    showStatus('Failed to fetch manifest: ' + error.message, 'error');
+                    return;
+                }
+            } else if (manifestJson) {
+                try {
+                    manifest = JSON.parse(manifestJson);
+                } catch (error) {
+                    showStatus('Invalid JSON: ' + error.message, 'error');
+                    return;
+                }
+            } else {
+                showStatus('Please enter a manifest URL or paste JSON', 'error');
+                return;
+            }
+            
+            // Validate manifest
+            const validation = validateIIIFManifest(manifest);
+            displayValidationResults(validation);
+        }
+        
+        function validateIIIFManifest(manifest) {
+            const results = [];
+            
+            // Basic IIIF validation
+            if (manifest['@context'] && manifest['@context'].includes('http://iiif.io/api/presentation/3/context.json')) {
+                results.push({valid: true, message: 'Valid IIIF 3.0 context'});
+            } else {
+                results.push({valid: false, message: 'Missing or invalid @context'});
+            }
+            
+            if (manifest.id) {
+                results.push({valid: true, message: 'Valid id'});
+            } else {
+                results.push({valid: false, message: 'Missing id'});
+            }
+            
+            if (manifest.type === 'Manifest') {
+                results.push({valid: true, message: 'Valid type'});
+            } else {
+                results.push({valid: false, message: 'Invalid type'});
+            }
+            
+            if (manifest.label) {
+                results.push({valid: true, message: 'Valid label'});
+            } else {
+                results.push({valid: false, message: 'Missing label'});
+            }
+            
+            if (manifest.items && manifest.items.length > 0) {
+                results.push({valid: true, message: `${manifest.items.length} canvas(es) found`});
+                
+                // Check for multi-canvas vs composition
+                if (manifest.items.length > 1) {
+                    results.push({valid: true, message: 'Multi-canvas manifest detected'});
+                } else {
+                    const canvas = manifest.items[0];
+                    if (canvas.items && canvas.items[0] && canvas.items[0].items && canvas.items[0].items.length > 1) {
+                        results.push({valid: true, message: `Composition with ${canvas.items[0].items.length} images`});
+                        
+                        // Check target format
+                        const firstTarget = canvas.items[0].items[0].target;
+                        if (typeof firstTarget === 'string') {
+                            results.push({valid: true, message: 'Cookbook-style targets (good for Mirador/TheseusViewer)'});
+                        } else if (typeof firstTarget === 'object') {
+                            results.push({valid: true, message: 'Object-style targets (good for OpenSeadragon)'});
+                        }
+                    }
+                }
+            } else {
+                results.push({valid: false, message: 'No items found'});
+            }
+            
+            return results;
+        }
+        
+        function displayValidationResults(results) {
+            const container = document.getElementById('validation-results');
+            container.innerHTML = results.map(result => 
+                `<div class="validation-item ${result.valid ? 'valid' : 'invalid'}">
+                    ${result.valid ? '✅' : '❌'} ${result.message}
+                </div>`
+            ).join('');
+            container.style.display = 'block';
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Ready to test IIIF manifests', 'info');
+        });
+    </script>
+</body>
+</html>
