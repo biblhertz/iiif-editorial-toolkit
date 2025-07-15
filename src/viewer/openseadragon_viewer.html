@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garofalo-Ligorio Comparison - OpenSeadragon Viewer</title>
+    <title>IIIF Comparison Viewer - OpenSeadragon</title>
     <style>
         body {
             font-family: 'Georgia', serif;
@@ -99,21 +99,6 @@
             color: #5d6d7e;
         }
         
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #7f8c8d;
-            font-size: 18px;
-        }
-        
-        .error {
-            background: #e74c3c;
-            color: white;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-        
         .button {
             background: #3498db;
             color: white;
@@ -130,62 +115,115 @@
             background: #2980b9;
         }
         
+        .button.secondary {
+            background: #95a5a6;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
         .metadata {
             font-size: 12px;
             color: #7f8c8d;
             margin-top: 10px;
         }
         
-        #openseadragon {
+        .customization-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .customization-notice h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        #openseadragon-viewer {
             width: 100%;
             height: 100%;
-            background: #2c3e50;
+            border: none;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Pirro Ligorio e la cultura antiquaria</h1>
-        <p>Confronto: Garofalo e Ligorio - Dal Trionfo di Bacco ai disegni derivati</p>
+        <h1>IIIF Comparison Viewer</h1>
+        <p>OpenSeadragon-based viewer for IIIF manifest comparison and analysis</p>
+    </div>
+    
+    <div class="customization-notice">
+        <h4>🔧 Customization Required</h4>
+        <p>This is a template version. Replace the placeholder manifest URLs in the dropdown with your actual research manifests. See documentation for customization instructions.</p>
     </div>
     
     <div class="viewer-container">
         <div class="main-viewer">
-            <div id="openseadragon"></div>
+            <div id="openseadragon-viewer"></div>
         </div>
         
         <div class="controls">
-            <h3>Controlli Visualizzatore</h3>
+            <h3>Viewer Controls</h3>
             
             <div class="manifest-selector">
-                <label for="manifestSelect">Seleziona Layout:</label>
+                <label for="manifestSelect">Select Manifest:</label>
                 <select id="manifestSelect">
-                    <option value="https://liladude.github.io/Manifest_server/comparison-fig4.json">Composizione Completa</option>
-                    <option value="https://liladude.github.io/Manifest_server/simplified-composition.json">Layout Semplificato</option>
-                    <option value="https://liladude.github.io/Manifest_server/basic-garofalo-ligorio.json">Sequenza Singola</option>
+                    <option value="">-- Select a manifest --</option>
+                    <!-- CUSTOMIZE: Replace these with your actual manifest URLs -->
+                    <option value="https://example.com/manifest1.json">Sample Comparison 1</option>
+                    <option value="https://example.com/manifest2.json">Sample Comparison 2</option>
+                    <option value="https://example.com/manifest3.json">Sample Single Image</option>
+                    <!-- IIIF Community Examples (can be kept for testing) -->
+                    <option value="https://iiif.io/api/cookbook/recipe/0036-composition-from-multiple-images/manifest.json">IIIF Cookbook - Multiple Images</option>
+                    <option value="https://digital.bodleian.ox.ac.uk/objects/748a8d01-41ad-4260-8f06-28d0db1d5ab6/manifest.json">Bodleian Library Example</option>
                 </select>
             </div>
             
-            <button class="button" onclick="loadManifest()">Carica Manifest</button>
-            <button class="button" onclick="resetView()">Reset Vista</button>
-            <button class="button" onclick="goHome()">Vista Completa</button>
-            <button class="button" onclick="fitComparison()">Adatta Confronto</button>
+            <button class="button" onclick="loadManifest()">🚀 Load Manifest</button>
+            <button class="button secondary" onclick="resetView()">🔄 Reset View</button>
+            <button class="button secondary" onclick="goHome()">🏠 Fit to Screen</button>
+            <button class="button secondary" onclick="fitComparison()">📐 Fit Comparison</button>
             
             <div class="info-panel">
-                <h4>Informazioni</h4>
-                <p><strong>Stato:</strong> <span id="status">Seleziona un manifest</span></p>
-                <p><strong>Immagini:</strong> <span id="imageCount">-</span></p>
-                <p><strong>Dimensioni:</strong> <span id="dimensions">-</span></p>
+                <h4>Manifest Info</h4>
+                <p><strong>Status:</strong> <span id="status">Select a manifest</span></p>
+                <p><strong>Images:</strong> <span id="imageCount">-</span></p>
+                <p><strong>Dimensions:</strong> <span id="dimensions">-</span></p>
                 <div class="metadata">
-                    <p><strong>Zoom:</strong> Rotella del mouse o doppio click</p>
-                    <p><strong>Pan:</strong> Trascina per spostarti</p>
-                    <p><strong>Reset:</strong> Tasto destro del mouse</p>
+                    <p><strong>Navigation:</strong></p>
+                    <p>• Zoom: Mouse wheel or double click</p>
+                    <p>• Pan: Click and drag</p>
+                    <p>• Reset: Right click or reset button</p>
                 </div>
             </div>
             
             <div class="info-panel">
-                <h4>Descrizione</h4>
-                <p>Analisi visiva della trasformazione del modello raffaellesco attraverso Garofalo fino alle rielaborazioni grafiche di Pirro Ligorio a Ferrara.</p>
+                <h4>About This Viewer</h4>
+                <p>Specialized OpenSeadragon viewer for IIIF manifests with intelligent parsing for different manifest types.</p>
+                <p><strong>Features:</strong></p>
+                <ul style="font-size: 12px; margin: 5px 0;">
+                    <li>Multi-canvas navigation</li>
+                    <li>Positioned composition support</li>
+                    <li>Automatic manifest type detection</li>
+                    <li>High-performance image rendering</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -195,10 +233,28 @@
         let viewer;
         let currentManifest = null;
         
-        // Initialize OpenSeadragon
+        // CUSTOMIZE: Update these settings for your research context
+        const viewerConfig = {
+            // Default page title and description
+            pageTitle: "IIIF Comparison Viewer",
+            pageDescription: "OpenSeadragon-based viewer for IIIF manifest comparison and analysis",
+            
+            // Default manifest URLs (replace with your research manifests)
+            defaultManifests: {
+                "sample1": "https://example.com/manifest1.json",
+                "sample2": "https://example.com/manifest2.json",
+                "sample3": "https://example.com/manifest3.json"
+            },
+            
+            // Institution or project name
+            institutionName: "Your Institution",
+            projectName: "Your Research Project"
+        };
+        
+        // Initialize OpenSeadragon viewer
         function initializeViewer() {
             viewer = OpenSeadragon({
-                id: "openseadragon",
+                id: "openseadragon-viewer",
                 prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
                 showNavigator: true,
                 navigatorPosition: "TOP_RIGHT",
@@ -207,10 +263,6 @@
                 showZoomControl: true,
                 showHomeControl: true,
                 showFullPageControl: true,
-                zoomInButton: "zoom-in",
-                zoomOutButton: "zoom-out",
-                homeButton: "home",
-                fullPageButton: "full-page",
                 animationTime: 1.2,
                 blendTime: 0.1,
                 constrainDuringPan: true,
@@ -230,20 +282,25 @@
             });
             
             viewer.addHandler('open', function() {
-                document.getElementById('status').textContent = 'Manifest caricato con successo';
+                document.getElementById('status').textContent = 'Manifest loaded successfully';
                 updateImageInfo();
             });
             
             viewer.addHandler('open-failed', function(event) {
-                document.getElementById('status').textContent = 'Errore nel caricamento';
-                showError('Errore nel caricamento del manifest: ' + event.message);
+                document.getElementById('status').textContent = 'Loading failed';
+                showError('Failed to load manifest. Please check the URL and try again.');
             });
         }
         
         // Load IIIF manifest
         async function loadManifest() {
             const manifestUrl = document.getElementById('manifestSelect').value;
-            document.getElementById('status').textContent = 'Caricamento...';
+            if (!manifestUrl) {
+                showError('Please select a manifest first');
+                return;
+            }
+            
+            document.getElementById('status').textContent = 'Loading...';
             
             try {
                 const response = await fetch(manifestUrl);
@@ -259,7 +316,7 @@
                 // Determine manifest type and handle accordingly
                 if (manifest.items && manifest.items.length > 0) {
                     
-                    // Check if it's a multi-canvas manifest (like basic-garofalo-ligorio.json)
+                    // Check if it's a multi-canvas manifest
                     if (manifest.items.length > 1) {
                         handleMultiCanvasManifest(manifest);
                     } else {
@@ -273,8 +330,8 @@
                 
             } catch (error) {
                 console.error('Error loading manifest:', error);
-                showError('Errore nel caricamento del manifest: ' + error.message);
-                document.getElementById('status').textContent = 'Errore nel caricamento';
+                showError('Failed to load manifest: ' + error.message);
+                document.getElementById('status').textContent = 'Loading failed';
             }
         }
         
@@ -282,11 +339,9 @@
         function handleMultiCanvasManifest(manifest) {
             console.log('Handling multi-canvas manifest');
             
-            // For multi-canvas, we'll show the first canvas and add navigation
-            const firstCanvas = manifest.items[0];
+            // Extract all canvases as separate tile sources
             const tileSources = [];
             
-            // Extract all canvases as separate tile sources
             manifest.items.forEach((canvas, index) => {
                 if (canvas.items && canvas.items[0] && canvas.items[0].items && canvas.items[0].items[0]) {
                     const annotation = canvas.items[0].items[0];
@@ -363,6 +418,17 @@
                         width: w / canvas.width,
                         height: h / canvas.height
                     };
+                } else if (target && typeof target === 'string' && target.includes('#xywh=')) {
+                    const xywh = target.split('#xywh=')[1];
+                    const [x, y, w, h] = xywh.split(',').map(Number);
+                    
+                    return {
+                        tileSource: tileSource,
+                        x: x / canvas.width,
+                        y: y / canvas.height,
+                        width: w / canvas.width,
+                        height: h / canvas.height
+                    };
                 }
                 
                 return tileSource;
@@ -397,11 +463,11 @@
             navDiv.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 1000;';
             
             const prevBtn = document.createElement('button');
-            prevBtn.textContent = '◀ Precedente';
+            prevBtn.textContent = '◀ Previous';
             prevBtn.style.cssText = 'margin-right: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
             
             const nextBtn = document.createElement('button');
-            nextBtn.textContent = 'Successivo ▶';
+            nextBtn.textContent = 'Next ▶';
             nextBtn.style.cssText = 'margin-left: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
             
             const counter = document.createElement('span');
@@ -410,14 +476,14 @@
             
             const title = document.createElement('div');
             title.style.cssText = 'font-size: 12px; text-align: center; margin-bottom: 5px;';
-            title.textContent = canvases[0].label ? (canvases[0].label.it || canvases[0].label.en || canvases[0].label) : 'Immagine 1';
+            title.textContent = canvases[0].label ? (canvases[0].label.en || canvases[0].label.it || canvases[0].label) : 'Image 1';
             
             navDiv.appendChild(title);
             navDiv.appendChild(prevBtn);
             navDiv.appendChild(counter);
             navDiv.appendChild(nextBtn);
             
-            document.getElementById('openseadragon').appendChild(navDiv);
+            document.getElementById('openseadragon-viewer').appendChild(navDiv);
             
             function updateNavigation() {
                 prevBtn.disabled = currentIndex === 0;
@@ -425,7 +491,7 @@
                 counter.textContent = `${currentIndex + 1} / ${tileSources.length}`;
                 
                 const canvas = canvases[currentIndex];
-                title.textContent = canvas.label ? (canvas.label.it || canvas.label.en || canvas.label) : `Immagine ${currentIndex + 1}`;
+                title.textContent = canvas.label ? (canvas.label.en || canvas.label.it || canvas.label) : `Image ${currentIndex + 1}`;
                 
                 prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
                 nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
@@ -453,7 +519,13 @@
         function updateImageInfo() {
             if (currentManifest && currentManifest.items) {
                 const canvas = currentManifest.items[0];
-                const imageCount = canvas.items && canvas.items[0] ? canvas.items[0].items.length : 1;
+                let imageCount = 1;
+                
+                if (currentManifest.items.length > 1) {
+                    imageCount = currentManifest.items.length;
+                } else if (canvas.items && canvas.items[0] && canvas.items[0].items) {
+                    imageCount = canvas.items[0].items.length;
+                }
                 
                 document.getElementById('imageCount').textContent = imageCount;
                 document.getElementById('dimensions').textContent = `${canvas.width} × ${canvas.height}`;
@@ -463,12 +535,14 @@
         function resetView() {
             if (viewer) {
                 viewer.viewport.goHome();
+                showSuccess('View reset to default position');
             }
         }
         
         function goHome() {
             if (viewer) {
                 viewer.viewport.goHome();
+                showSuccess('View fitted to screen');
             }
         }
         
@@ -480,6 +554,7 @@
                 setTimeout(() => {
                     viewer.viewport.zoomBy(0.9);
                 }, 100);
+                showSuccess('View optimized for comparison');
             }
         }
         
@@ -494,14 +569,21 @@
             }, 5000);
         }
         
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.controls').appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+        
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeViewer();
-            
-            // Load default manifest
-            setTimeout(() => {
-                loadManifest();
-            }, 1000);
+            document.getElementById('status').textContent = 'Ready - select a manifest to begin';
         });
     </script>
 </body>
