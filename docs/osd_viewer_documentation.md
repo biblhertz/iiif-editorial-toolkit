@@ -6,6 +6,117 @@ The OpenSeadragon IIIF Viewer is a specialized tool for displaying IIIF manifest
 
 ---
 
+## Customization Instructions
+
+### 🔧 **Repository Setup**
+This viewer includes placeholder content that must be customized for your research:
+
+#### **Required Customizations**
+
+##### **1. Update Manifest URLs**
+Replace the placeholder URLs in the dropdown:
+```html
+<!-- CUSTOMIZE: Replace these with your actual manifest URLs -->
+<option value="https://example.com/manifest1.json">Sample Comparison 1</option>
+<option value="https://example.com/manifest2.json">Sample Comparison 2</option>
+<option value="https://example.com/manifest3.json">Sample Single Image</option>
+```
+
+**Replace with:**
+```html
+<option value="https://your-institution.edu/manifests/comparison1.json">Your Research Comparison 1</option>
+<option value="https://your-institution.edu/manifests/comparison2.json">Your Research Comparison 2</option>
+<option value="https://your-institution.edu/manifests/single-image.json">Your Research Single Image</option>
+```
+
+##### **2. Update Page Content**
+Modify the header and descriptions:
+```html
+<!-- Current placeholders -->
+<title>IIIF Comparison Viewer</title>
+<h1>IIIF Comparison Viewer</h1>
+<p>OpenSeadragon-based viewer for IIIF manifest comparison and analysis</p>
+
+<!-- Replace with your content -->
+<title>Your Research Project - IIIF Viewer</title>
+<h1>Your Research Project Name</h1>
+<p>Specialized viewer for [your research topic] image analysis</p>
+```
+
+##### **3. Update Configuration**
+Modify the viewerConfig object:
+```javascript
+const viewerConfig = {
+    pageTitle: "Your Research Project - IIIF Viewer",
+    pageDescription: "Your research description here",
+    
+    defaultManifests: {
+        "study1": "https://your-domain.edu/manifests/study1.json",
+        "study2": "https://your-domain.edu/manifests/study2.json",
+        "study3": "https://your-domain.edu/manifests/study3.json"
+    },
+    
+    institutionName: "Your Institution Name",
+    projectName: "Your Research Project Name"
+};
+```
+
+##### **4. Update Navigation Language**
+The current version uses English. For Italian navigation:
+```javascript
+// English version
+prevBtn.textContent = '◀ Previous';
+nextBtn.textContent = 'Next ▶';
+
+// Italian version
+prevBtn.textContent = '◀ Precedente';
+nextBtn.textContent = 'Successivo ▶';
+```
+
+#### **Optional Customizations**
+
+##### **Styling and Branding**
+- Update colors to match your institution's brand
+- Add institution logo to header
+- Modify fonts and spacing as needed
+
+##### **Additional Features**
+- Add custom metadata display
+- Include citation information
+- Add export/sharing capabilities
+
+### 📁 **File Structure for Repository**
+```
+your-repo/
+├── src/
+│   ├── viewer/
+│   │   ├── openseadragon-viewer.html           # Main viewer file
+│   │   ├── openseadragon-viewer-template.html  # Template with placeholders
+│   │   └── customization-guide.md              # Detailed customization instructions
+│   └── examples/
+│       └── sample-manifests/
+├── docs/
+│   └── viewer-manual.md
+└── README.md
+```
+
+### 🚀 **Quick Setup Guide**
+1. **Clone the repository**
+2. **Open `openseadragon-viewer-template.html`**
+3. **Replace all placeholder URLs** with your manifest URLs
+4. **Update page title and descriptions**
+5. **Modify the viewerConfig** with your project details
+6. **Test with your manifests**
+7. **Deploy to your web server**
+
+### ⚠️ **Important Notes**
+- **Keep IIIF community examples** for testing functionality
+- **Ensure your manifests are accessible** via HTTPS
+- **Test CORS settings** if hosting on different domains
+- **Validate your manifests** before deployment
+
+---
+
 ## Getting Started
 
 ### 🚀 **Loading a Manifest**
@@ -326,4 +437,4 @@ A: Limited by browser memory and IIIF service capabilities. Very large images ma
 
 ---
 
-*Instructions last updated: December 2024*
+*Instructions last updated: 15/07/2025*
