@@ -150,11 +150,11 @@ Ideal for complex academic publications:
 
 ## 📖 Detailed Documentation
 
-- [Generator Guide](./docs/generator-guide.md) - Complete guide to manifest generation
-- [Viewer Guide](./docs/viewer-guide.md) - Using the viewers effectively
-- [Layout Algorithms](./docs/layout-algorithms.md) - Understanding positioning systems
-- [IIIF Compliance](./docs/iiif-compliance.md) - Standards and best practices
-- [API Reference](./docs/api-reference.md) - Technical specifications
+- [Generator Guide](./docs/generator_guide.md) - Complete guide to manifest generation
+- [Viewer Guide](./docs/viewer_guide.md) - Using the viewers effectively
+- [Layout Algorithms](./docs/layout_algorithms.md) - Understanding positioning systems
+- [IIIF Compliance](./docs/iiif_compliance.md) - Standards and best practices
+- [API Reference](./docs/api_reference.md) - Technical specifications
 - [Examples](./docs/examples.md) - Coded examples and use cases
 
 ## 🎯 Use Cases
