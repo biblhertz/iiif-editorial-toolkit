@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIIF Comparison Viewer - OpenSeadragon</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin: 0;
+        }
+        
+        .viewer-container {
+            display: flex;
+            gap: 20px;
+            height: 700px;
+        }
+        
+        .main-viewer {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .controls {
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        .form-group select, .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .info-panel {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .info-panel h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #5d6d7e;
+        }
+        
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background: #2980b9;
+        }
+        
+        .button.secondary {
+            background: #95a5a6;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .metadata {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+        
+        .customization-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .customization-notice h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        #openseadragon-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>IIIF Comparison Viewer</h1>
+        <p>OpenSeadragon-based viewer for IIIF manifest comparison and analysis</p>
+    </div>
+    
+    <div class="customization-notice">
+        <h4>🔧 Customization Required</h4>
+        <p>This is a template version. Replace the placeholder manifest URLs in the dropdown with your actual research manifests. See documentation for customization instructions.</p>
+    </div>
+    
+    <div class="viewer-container">
+        <div class="main-viewer">
+            <div id="openseadragon-viewer"></div>
+        </div>
+        
+        <div class="controls">
+            <h3>Manifest Loading</h3>
+            
+            <div class="form-group">
+                <label for="manifestSelect">Quick Test Manifests:</label>
+                <select id="manifestSelect">
+                    <option value="">-- Select a manifest --</option>
+                    <!-- CUSTOMIZE: Replace these with your actual manifest URLs -->
+                    <option value="https://example.com/manifest1.json">Sample Comparison 1</option>
+                    <option value="https://example.com/manifest2.json">Sample Comparison 2</option>
+                    <option value="https://example.com/manifest3.json">Sample Single Image</option>
+                    <!-- IIIF Community Examples (can be kept for testing) -->
+                    <option value="https://iiif.io/api/cookbook/recipe/0036-composition-from-multiple-images/manifest.json">IIIF Cookbook - Multiple Images</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0001-mvm-image/manifest.json">IIIF Cookbook - Basic Image</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestUrl">Your Manifest URL:</label>
+                <input type="url" id="manifestUrl" placeholder="https://your-manifest.json">
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestJson">Or paste JSON directly:</label>
+                <textarea id="manifestJson" placeholder="Paste your manifest JSON here..."></textarea>
+            </div>
+            
+            <button class="button" onclick="loadManifest()">🚀 Load Manifest</button>
+            <button class="button secondary" onclick="resetView()">🔄 Reset View</button>
+            <button class="button secondary" onclick="goHome()">🏠 Fit to Screen</button>
+            <button class="button secondary" onclick="fitComparison()">📐 Fit Comparison</button>
+            
+            <div class="info-panel">
+                <h4>Manifest Info</h4>
+                <p><strong>Status:</strong> <span id="status">Select a manifest</span></p>
+                <p><strong>Images:</strong> <span id="imageCount">-</span></p>
+                <p><strong>Dimensions:</strong> <span id="dimensions">-</span></p>
+                <div class="metadata">
+                    <p><strong>Navigation:</strong></p>
+                    <p>• Zoom: Mouse wheel or double click</p>
+                    <p>• Pan: Click and drag</p>
+                    <p>• Reset: Right click or reset button</p>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h4>About This Viewer</h4>
+                <p>Specialized OpenSeadragon viewer for IIIF manifests with intelligent parsing for different manifest types.</p>
+                <p><strong>Features:</strong></p>
+                <ul style="font-size: 12px; margin: 5px 0;">
+                    <li>Multi-canvas navigation</li>
+                    <li>Positioned composition support</li>
+                    <li>Automatic manifest type detection</li>
+                    <li>High-performance image rendering</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+    <script>
+        let viewer;
+        let currentManifest = null;
+        
+        // CUSTOMIZE: Update these settings for your research context
+        const viewerConfig = {
+            // Default page title and description
+            pageTitle: "IIIF Comparison Viewer",
+            pageDescription: "OpenSeadragon-based viewer for IIIF manifest comparison and analysis",
+            
+            // Default manifest URLs (replace with your research manifests)
+            defaultManifests: {
+                "sample1": "https://example.com/manifest1.json",
+                "sample2": "https://example.com/manifest2.json",
+                "sample3": "https://example.com/manifest3.json"
+            },
+            
+            // Institution or project name
+            institutionName: "Your Institution",
+            projectName: "Your Research Project"
+        };
+        
+        // Initialize OpenSeadragon viewer
+        function initializeViewer() {
+            viewer = OpenSeadragon({
+                id: "openseadragon-viewer",
+                prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+                showNavigator: true,
+                navigatorPosition: "TOP_RIGHT",
+                showNavigationControl: true,
+                navigationControlAnchor: OpenSeadragon.ControlAnchor.TOP_LEFT,
+                showZoomControl: true,
+                showHomeControl: true,
+                showFullPageControl: true,
+                animationTime: 1.2,
+                blendTime: 0.1,
+                constrainDuringPan: true,
+                maxZoomPixelRatio: 2,
+                minZoomLevel: 0.8,
+                visibilityRatio: 1,
+                zoomPerScroll: 2,
+                showRotationControl: true,
+                gestureSettingsMouse: {
+                    scrollToZoom: true,
+                    clickToZoom: true,
+                    dblClickToZoom: true,
+                    pinchToZoom: true,
+                    flickEnabled: true,
+                    pinchRotate: false
+                }
+            });
+            
+            viewer.addHandler('open', function() {
+                document.getElementById('status').textContent = 'Manifest loaded successfully';
+                updateImageInfo();
+            });
+            
+            viewer.addHandler('open-failed', function(event) {
+                document.getElementById('status').textContent = 'Loading failed';
+                showError('Failed to load manifest. Please check the URL and try again.');
+            });
+        }
+        
+        // Enhanced load manifest function with multiple input options
+        async function loadManifest() {
+            const manifestUrl = document.getElementById('manifestUrl').value.trim();
+            const manifestJson = document.getElementById('manifestJson').value.trim();
+            
+            let manifestSource = null;
+            
+            // Determine which source to use
+            if (manifestUrl) {
+                manifestSource = manifestUrl;
+            } else if (manifestJson) {
+                try {
+                    const manifest = JSON.parse(manifestJson);
+                    // Create a blob URL for the manifest
+                    const blob = new Blob([JSON.stringify(manifest, null, 2)], {type: 'application/json'});
+                    manifestSource = URL.createObjectURL(blob);
+                } catch (error) {
+                    showError('Invalid JSON: ' + error.message);
+                    return;
+                }
+            } else {
+                showError('Please enter a manifest URL or paste JSON');
+                return;
+            }
+            
+            // Clear other inputs when one is used
+            if (manifestUrl) {
+                document.getElementById('manifestJson').value = '';
+                document.getElementById('manifestSelect').value = '';
+            } else if (manifestJson) {
+                document.getElementById('manifestUrl').value = '';
+                document.getElementById('manifestSelect').value = '';
+            }
+            
+            loadManifestFromUrl(manifestSource);
+        }
+        
+        // Direct manifest loading function
+        async function loadManifestFromUrl(manifestUrl) {
+            document.getElementById('status').textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(manifestUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const manifest = await response.json();
+                currentManifest = manifest;
+                
+                console.log('Manifest loaded:', manifest);
+                
+                // Determine manifest type and handle accordingly
+                if (manifest.items && manifest.items.length > 0) {
+                    
+                    // Check if it's a multi-canvas manifest
+                    if (manifest.items.length > 1) {
+                        handleMultiCanvasManifest(manifest);
+                    } else {
+                        // Single canvas manifest
+                        const canvas = manifest.items[0];
+                        handleSingleCanvasManifest(canvas);
+                    }
+                } else {
+                    throw new Error('No items found in manifest');
+                }
+                
+            } catch (error) {
+                console.error('Error loading manifest:', error);
+                showError('Failed to load manifest: ' + error.message);
+                document.getElementById('status').textContent = 'Loading failed';
+            }
+        }
+        
+        // Handle multi-canvas manifests (sequential images)
+        function handleMultiCanvasManifest(manifest) {
+            console.log('Handling multi-canvas manifest');
+            
+            // Extract all canvases as separate tile sources
+            const tileSources = [];
+            
+            manifest.items.forEach((canvas, index) => {
+                if (canvas.items && canvas.items[0] && canvas.items[0].items && canvas.items[0].items[0]) {
+                    const annotation = canvas.items[0].items[0];
+                    const body = annotation.body;
+                    
+                    const tileSource = {
+                        "@context": "http://iiif.io/api/image/2/context.json",
+                        "@id": body.service ? body.service[0].id : body.id,
+                        "protocol": "http://iiif.io/api/image",
+                        "width": body.width || canvas.width,
+                        "height": body.height || canvas.height,
+                        "profile": ["http://iiif.io/api/image/2/level2.json"]
+                    };
+                    
+                    tileSources.push(tileSource);
+                }
+            });
+            
+            // Open with first tile source
+            if (tileSources.length > 0) {
+                viewer.open(tileSources[0]);
+                
+                // Add navigation for multiple canvases
+                if (tileSources.length > 1) {
+                    addCanvasNavigation(tileSources, manifest.items);
+                }
+            }
+        }
+        
+        // Handle single canvas manifests (composition or simple layout)
+        function handleSingleCanvasManifest(canvas) {
+            console.log('Handling single canvas manifest');
+            
+            if (canvas.items && canvas.items[0] && canvas.items[0].items) {
+                const annotations = canvas.items[0].items;
+                
+                // Check if it's a composition (multiple annotations) or simple single image
+                if (annotations.length > 1) {
+                    // Multiple annotations - composition layout
+                    handleCompositionLayout(annotations, canvas);
+                } else {
+                    // Single annotation - simple image
+                    handleSimpleImage(annotations[0], canvas);
+                }
+            }
+        }
+        
+        // Handle composition layout (multiple positioned images)
+        function handleCompositionLayout(annotations, canvas) {
+            console.log('Handling composition layout with', annotations.length, 'annotations');
+            
+            const tileSources = annotations.map(annotation => {
+                const body = annotation.body;
+                const target = annotation.target;
+                
+                let tileSource = {
+                    "@context": "http://iiif.io/api/image/2/context.json",
+                    "@id": body.service ? body.service[0].id : body.id,
+                    "protocol": "http://iiif.io/api/image",
+                    "width": body.width || canvas.width,
+                    "height": body.height || canvas.height,
+                    "profile": ["http://iiif.io/api/image/2/level2.json"]
+                };
+                
+                // Handle positioning if present
+                if (target && typeof target === 'object' && target.id && target.id.includes('#xywh=')) {
+                    const xywh = target.id.split('#xywh=')[1];
+                    const [x, y, w, h] = xywh.split(',').map(Number);
+                    
+                    return {
+                        tileSource: tileSource,
+                        x: x / canvas.width,
+                        y: y / canvas.height,
+                        width: w / canvas.width,
+                        height: h / canvas.height
+                    };
+                } else if (target && typeof target === 'string' && target.includes('#xywh=')) {
+                    const xywh = target.split('#xywh=')[1];
+                    const [x, y, w, h] = xywh.split(',').map(Number);
+                    
+                    return {
+                        tileSource: tileSource,
+                        x: x / canvas.width,
+                        y: y / canvas.height,
+                        width: w / canvas.width,
+                        height: h / canvas.height
+                    };
+                }
+                
+                return tileSource;
+            });
+            
+            viewer.open(tileSources);
+        }
+        
+        // Handle simple single image
+        function handleSimpleImage(annotation, canvas) {
+            console.log('Handling simple image');
+            
+            const body = annotation.body;
+            
+            const tileSource = {
+                "@context": "http://iiif.io/api/image/2/context.json",
+                "@id": body.service ? body.service[0].id : body.id,
+                "protocol": "http://iiif.io/api/image",
+                "width": body.width || canvas.width,
+                "height": body.height || canvas.height,
+                "profile": ["http://iiif.io/api/image/2/level2.json"]
+            };
+            
+            viewer.open(tileSource);
+        }
+        
+        // Add navigation for multi-canvas manifests
+        function addCanvasNavigation(tileSources, canvases) {
+            let currentIndex = 0;
+            
+            const navDiv = document.createElement('div');
+            navDiv.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 1000;';
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '◀ Previous';
+            prevBtn.style.cssText = 'margin-right: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next ▶';
+            nextBtn.style.cssText = 'margin-left: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            
+            const counter = document.createElement('span');
+            counter.textContent = `1 / ${tileSources.length}`;
+            counter.style.cssText = 'margin: 0 10px; font-weight: bold;';
+            
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size: 12px; text-align: center; margin-bottom: 5px;';
+            title.textContent = canvases[0].label ? (canvases[0].label.en || canvases[0].label.it || canvases[0].label) : 'Image 1';
+            
+            navDiv.appendChild(title);
+            navDiv.appendChild(prevBtn);
+            navDiv.appendChild(counter);
+            navDiv.appendChild(nextBtn);
+            
+            document.getElementById('openseadragon-viewer').appendChild(navDiv);
+            
+            function updateNavigation() {
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex === tileSources.length - 1;
+                counter.textContent = `${currentIndex + 1} / ${tileSources.length}`;
+                
+                const canvas = canvases[currentIndex];
+                title.textContent = canvas.label ? (canvas.label.en || canvas.label.it || canvas.label) : `Image ${currentIndex + 1}`;
+                
+                prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+                nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    viewer.open(tileSources[currentIndex]);
+                    updateNavigation();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentIndex < tileSources.length - 1) {
+                    currentIndex++;
+                    viewer.open(tileSources[currentIndex]);
+                    updateNavigation();
+                }
+            });
+            
+            updateNavigation();
+        }
+        
+        function updateImageInfo() {
+            if (currentManifest && currentManifest.items) {
+                const canvas = currentManifest.items[0];
+                let imageCount = 1;
+                
+                if (currentManifest.items.length > 1) {
+                    imageCount = currentManifest.items.length;
+                } else if (canvas.items && canvas.items[0] && canvas.items[0].items) {
+                    imageCount = canvas.items[0].items.length;
+                }
+                
+                document.getElementById('imageCount').textContent = imageCount;
+                document.getElementById('dimensions').textContent = `${canvas.width} × ${canvas.height}`;
+            }
+        }
+        
+        function resetView() {
+            if (viewer) {
+                viewer.viewport.goHome();
+                showSuccess('View reset to default position');
+            }
+        }
+        
+        function goHome() {
+            if (viewer) {
+                viewer.viewport.goHome();
+                showSuccess('View fitted to screen');
+            }
+        }
+        
+        function fitComparison() {
+            if (viewer) {
+                // Force fit to entire canvas for comparison viewing
+                viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, 1, 1), true);
+                // Set a comfortable zoom level for comparison
+                setTimeout(() => {
+                    viewer.viewport.zoomBy(0.9);
+                }, 100);
+                showSuccess('View optimized for comparison');
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.controls').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.controls').appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeViewer();
+            document.getElementById('status').textContent = 'Ready - select a manifest to begin';
+            
+            // Auto-load manifest when selected from dropdown
+            const manifestSelect = document.getElementById('manifestSelect');
+            manifestSelect.addEventListener('change', function() {
+                if (this.value) {
+                    // Clear other inputs and load directly
+                    document.getElementById('manifestUrl').value = this.value;
+                    document.getElementById('manifestJson').value = '';
+                    
+                    // Load manifest directly
+                    loadManifestFromUrl(this.value);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
