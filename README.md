@@ -2,8 +2,8 @@
 
 A comprehensive suite of tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts.
 
-## The history Behind
-This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than genrating a composition in Photoshop. Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kinda. The viewer is a quick way to check the code, or even a draft for a display page, because I wanted a local Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
+## The History Behind
+This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than generating a composition in a photo editor for Art History academic digital publications. After testing what was available, I decided that what I needed was nowere to be found and started a complex jurney with the support of an artificial intelligence (Claude Sonnet 4 by Anthropic). Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kind of. The viewer was added as a quick way to check the code, and it is a Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
 
 For this reason I double checked the IIIF Multi-Image cookbook and found that the OSD manifest had a totally different approach. I asked to rebuilt everything in a new version. if you think this might be interesting, you can read the full description below.
 
