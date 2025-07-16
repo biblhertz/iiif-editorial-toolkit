@@ -11,7 +11,7 @@ Please note that you need to know your IIIF image api link (the info.json), to b
 
 ## 🚀 Quick Start
 
-### Demo
+### Demo (to be added)
 Visit our [live demo](https://biblhertz.github.io/iiif-editorial-toolkit/) to try all tools without installation.
 
 ### Local Setup
