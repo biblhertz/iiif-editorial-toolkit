@@ -5,7 +5,9 @@ A comprehensive suite of tools for creating, viewing, and managing IIIF (Interna
 ## The History Behind
 This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than generating a composition in a photo editor for Art History academic digital publications. After testing what was available, I decided that what I needed was nowere to be found and started a complex jurney with the support of an artificial intelligence (Claude Sonnet 4 by Anthropic). Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kind of. The viewer was added as a quick way to check the code, and it is a Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
 
-For this reason I double checked the IIIF Multi-Image cookbook and found that the OSD manifest had a totally different approach. I asked to rebuilt everything in a new version. if you think this might be interesting, you can read the full description below.
+For this reason I double checked the IIIF Multi-Image cookbook and found that the OSD manifest had a totally different approach. I asked to rebuilt everything in a new version. If you think this might be interesting or useful, you can read the full description below.
+
+Please note that you need to know your IIIF image api link (the info.json), to be able to create a composition manifest. Also, for very complex layouts, it is faster to do a mockup in Illustrator and then insert the coordinates (xywh) of each element than hoping for a preset to fit your needs.
 
 ## 🚀 Quick Start
 
