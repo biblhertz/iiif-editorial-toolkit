@@ -18,21 +18,22 @@ cd iiif-editorial-toolkit
 
 ```
 iiif-academic-toolkit/
-├── demo/                    # GitHub Pages demo site
-├── docs/                    # Documentation (you are here)
-├── generator/               # Manifest generation tools
-│   ├── iiif_generator.html  # Enhanced academic generator
-│   └── osd_generator.html   # OpenSeadragon-focused generator
-├── openseadragon/          # OpenSeadragon viewer
-│   └── osd_viewer.html     # Specialized OSD viewer
-├── viewer/                 # Multi-viewer testing tools
-│   └── iiif_viewer.html    # Multi-viewer comparison tool
+├── demo/                    # GitHub Pages demo site (TBD)
+├── docs/                    # Documentation 
+├── src/                      # The code 
+│   ├── generator/               # Manifest generation tools
+│   │   ├── iiif_generator.html  # Enhanced academic generator
+│   │   └── osd_generator.html   # OpenSeadragon-focused generator
+│   ├── openseadragon/          # OpenSeadragon viewer
+│   │   └── osd_viewer.html     # Specialized OSD viewer
+│   ├── viewer/                 # Multi-viewer testing tools
+│   │   └── iiif_viewer.html    # Multi-viewer comparison tool
 └── README.md              # This file
 ```
 
 ## 🛠️ Tools Overview
 
-### 1. Enhanced Academic Generator (`iiif_generator.html`)
+### 1. III Manifest Generator (`iiif_generator.html`)
 **Best for:** Complex academic projects with multiple comparison layouts
 
 **Features:**
@@ -220,4 +221,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for the academic community**
+**Made with ❤️ and Claude Sonnet 4 for the academic editorial community**
