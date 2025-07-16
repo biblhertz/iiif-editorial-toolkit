@@ -1,6 +1,6 @@
 # Layout Algorithms
 
-Detailed explanation of positioning systems and layout calculations used in the IIIF Academic Toolkit.
+Detailed explanation of positioning systems and layout calculations used in the IIIF Editorial Toolkit.
 
 ## 🎯 Overview
 
