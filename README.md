@@ -2,10 +2,15 @@
 
 A comprehensive suite of tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts.
 
+## The history Behind
+This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than genrating a composition in Photoshop. Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kinda. The viewer is a quick way to check the code, or even a draft for a display page, because I wanted a local Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
+
+For this reason I double checked the IIIF Multi-Image cookbook and found that the OSD manifest had a totally different approach. I asked to rebuilt everything in a new version. if you think this might be interesting, you can read the full description below.
+
 ## 🚀 Quick Start
 
 ### Demo
-Visit our [live demo](https://yourusername.github.io/iiif-academic-toolkit/) to try all tools without installation.
+Visit our [live demo](https://yourusername.github.io/iiif-editorial-toolkit/) to try all tools without installation.
 
 ### Local Setup
 ```bash
@@ -17,18 +22,18 @@ cd iiif-editorial-toolkit
 ## 📚 Project Structure
 
 ```
-iiif-academic-toolkit/
-├── demo/                    # GitHub Pages demo site (TBD)
-├── docs/                    # Documentation 
-├── src/                      # The code 
+iiif-editorial-toolkit/
+├── demo/                        # GitHub Pages demo site (TBD)
+├── docs/                        # Documentation 
+├── src/                         # The code 
 │   ├── generator/               # Manifest generation tools
 │   │   ├── iiif_generator.html  # Enhanced academic generator
 │   │   └── osd_generator.html   # OpenSeadragon-focused generator
-│   ├── openseadragon/          # OpenSeadragon viewer
-│   │   └── osd_viewer.html     # Specialized OSD viewer
-│   ├── viewer/                 # Multi-viewer testing tools
-│   │   └── iiif_viewer.html    # Multi-viewer comparison tool
-└── README.md              # This file
+│   ├── openseadragon/           # OpenSeadragon viewer
+│   │   └── osd_viewer.html      # Specialized OSD viewer
+│   └── viewer/                  # Multi-viewer testing tools
+│       └── iiif_viewer.html     # Multi-viewer comparison tool
+└── README.md                    # This file
 ```
 
 ## 🛠️ Tools Overview
@@ -215,7 +220,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- Create an [issue](https://github.com/yourusername/iiif-academic-toolkit/issues)
+- Create an [issue](https://github.com/yourusername/iiif-editorial-toolkit/issues)
 - Check the [documentation](./docs/)
 - Join the [IIIF Community](https://iiif.io/community/)
 
