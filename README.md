@@ -10,7 +10,7 @@ For this reason I double checked the IIIF Multi-Image cookbook and found that th
 ## 🚀 Quick Start
 
 ### Demo
-Visit our [live demo](https://yourusername.github.io/iiif-editorial-toolkit/) to try all tools without installation.
+Visit our [live demo](https://biblhertz.github.io/iiif-editorial-toolkit/) to try all tools without installation.
 
 ### Local Setup
 ```bash
@@ -148,12 +148,12 @@ Ideal for complex academic publications:
 
 ## 📖 Detailed Documentation
 
-- [Generator Guide](./generator-guide.md) - Complete guide to manifest generation
-- [Viewer Guide](./viewer-guide.md) - Using the viewers effectively
-- [Layout Algorithms](./layout-algorithms.md) - Understanding positioning systems
-- [IIIF Compliance](./iiif-compliance.md) - Standards and best practices
-- [API Reference](./api-reference.md) - Technical specifications
-- [Examples](./examples.md) - Real-world use cases
+- [Generator Guide](./docs/generator-guide.md) - Complete guide to manifest generation
+- [Viewer Guide](./docs/viewer-guide.md) - Using the viewers effectively
+- [Layout Algorithms](./docs/layout-algorithms.md) - Understanding positioning systems
+- [IIIF Compliance](./docs/iiif-compliance.md) - Standards and best practices
+- [API Reference](./docs/api-reference.md) - Technical specifications
+- [Examples](./docs/examples.md) - Coded examples and use cases
 
 ## 🎯 Use Cases
 
