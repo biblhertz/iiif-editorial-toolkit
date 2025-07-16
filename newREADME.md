@@ -1,4 +1,4 @@
-# IIIF Academic Toolkit
+# IIIF Editorial Toolkit
 
 A comprehensive suite of tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts.
 
@@ -9,8 +9,8 @@ Visit our [live demo](https://yourusername.github.io/iiif-academic-toolkit/) to 
 
 ### Local Setup
 ```bash
-git clone https://github.com/yourusername/iiif-academic-toolkit.git
-cd iiif-academic-toolkit
+git clone https://github.com/biblhertz/iiif-editorial-toolkit.git
+cd iiif-editorial-toolkit
 # Open any HTML file in your browser - no build step required!
 ```
 
