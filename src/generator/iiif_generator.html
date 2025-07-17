@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Academic IIIF Manifest Generator</title>
+    <title>Editorial IIIF Manifest Generator</title>
     <style>
         * { box-sizing: border-box; }
         
@@ -1075,7 +1075,7 @@
                     }]
                 }));
             } else {
-                // FIXED: Single canvas with positioning for Universal (Mirador/TheseusViewer)
+                // FIXED: Single canvas with positioning for Universal (Cookbook format)
                 manifest.items = [{
                     "id": `https://liladude.github.io/Manifest_server/${manifestId}/canvas/layout`,
                     "type": "Canvas",
@@ -1096,7 +1096,6 @@
                                 "id": `https://liladude.github.io/Manifest_server/${manifestId}/annotation/img${index + 1}`,
                                 "type": "Annotation",
                                 "motivation": "painting",
-                                "target": `https://liladude.github.io/Manifest_server/${manifestId}/canvas/layout#xywh=${x},${y},${w},${h}`,
                                 "body": {
                                     "id": img.imageUrl,
                                     "type": "Image",
@@ -1108,7 +1107,8 @@
                                         "type": "ImageService3",
                                         "profile": "level2"
                                     }]
-                                }
+                                },
+                                "target": `https://liladude.github.io/Manifest_server/${manifestId}/canvas/layout#xywh=${x},${y},${w},${h}`
                             };
                         })
                     }],
