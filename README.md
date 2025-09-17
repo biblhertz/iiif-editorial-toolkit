@@ -31,7 +31,10 @@ iiif-editorial-toolkit/
 │   ├── generator/               # Manifest generation tools
 │   │   ├── iiif_generator.html  # Enhanced academic generator
 │   │   └── osd_generator.html   # OpenSeadragon-focused generator
+│   ├── size_updater             # Manifest image size updater
+│   │   └── IIIF_manifest_dimension_updater.html      # quick tool for quering image size from IIIF server
 │   ├── openseadragon/           # OpenSeadragon viewer
+│   │   ├── osd_generator.html   # OpenSeadragon-focused generator
 │   │   └── osd_viewer.html      # Specialized OSD viewer
 │   └── viewer/                  # Multi-viewer testing tools
 │       └── iiif_viewer.html     # Multi-viewer comparison tool
