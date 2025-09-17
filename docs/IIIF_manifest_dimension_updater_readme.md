@@ -41,7 +41,7 @@ When generating IIIF manifests from structured data (caption lists, CSV files, o
 
 ## Installation
 
-1. Download `browser_dimension_updater.html`
+1. Download `IIIF_manifest_dimension_updater.html` from the `../src/size_updater/` folder
 2. Open the file in your web browser
 3. No installation or dependencies required!
 
