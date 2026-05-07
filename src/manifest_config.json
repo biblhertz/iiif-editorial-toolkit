@@ -1,0 +1,12 @@
+{
+  "manifest_id":       "https://annotation.biblhertz.it/iiif_manifests/HSAH/04/hsah_0406.json",
+  "base_canvas":       "https://annotation.biblhertz.it/iiif_manifests/HSAH/04/hsah_0406",
+  "label_it":          "Pirro Ligorio e i fasti dei magistri Fontani dalle pendici dell'Aventino (Roma)",
+  "label_en":          "Pirro Ligorio and the fasti of the magistri Fontani from the slopes of the Aventine Hill (Rome)",
+  "rights":            "https://creativecommons.org/licenses/by/4.0/",
+  "required_stmt_it":  "Bibliotheca Hertziana – Istituto Max Planck per la storia dell'arte",
+  "required_stmt_en":  "Bibliotheca Hertziana – Max Planck Institute for Art History",
+  "fetch_delay":       0.3,
+  "fallback_width":    1000,
+  "fallback_height":   1000
+}
