@@ -11,7 +11,7 @@ The pipeline consists of three files:
 
 | File | Role |
 |---|---|
-| `xml_to_manifest.py` | Main script — do not edit |
+| `xml-to-manifest.py` | Main script — do not edit |
 | `manifest_config.json` | Configuration — editors set values here |
 | `fig-extractor.py` | Optional audit tool — exports a CSV of all figures |
 
@@ -27,7 +27,7 @@ The pipeline consists of three files:
 
 ## Quick Start
 
-1. Place `xml_to_manifest.py` and `manifest_config.json` in the same folder as your XML file.
+1. Place `xml-to-manifest.py` and `manifest_config.json` in the same folder as your XML file.
 2. Edit `manifest_config.json` with the correct values for your article (see Configuration below).
 3. Open a terminal in that folder and run:
 
@@ -86,10 +86,10 @@ Editors should only ever modify this file. The script reads all publication-spec
 
 ```bash
 # Minimal — reads article.xml, config from manifest_config.json, writes hsah_0407.json
-python xml_to_manifest.py article.xml
+python xml-to-manifest.py article.xml
 
 # Explicit output filename
-python xml_to_manifest.py article.xml my_output.json
+python xml-to-manifest.py article.xml my_output.json
 
 # Custom config file (e.g. for a different journal or institution)
 python xml_to_manifest.py article.xml my_output.json my_config.json
