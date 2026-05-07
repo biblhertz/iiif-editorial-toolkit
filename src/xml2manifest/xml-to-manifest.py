@@ -217,7 +217,7 @@ def extract_and_build(xml_path: str, out_path: str, cfg: dict):
 
 if __name__ == "__main__":
     xml  = sys.argv[1] if len(sys.argv) > 1 else "article.xml"
-    out  = sys.argv[2] if len(sys.argv) > 2 else "hsah_0407.json"
+    out  = sys.argv[2] if len(sys.argv) > 2 else "manifest.json"
     cfg_path = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_CONFIG
     cfg  = load_config(cfg_path)
     extract_and_build(xml, out, cfg)
