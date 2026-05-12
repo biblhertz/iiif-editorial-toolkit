@@ -6,6 +6,7 @@
   "rights":            "https://creativecommons.org/licenses/by/4.0/",
   "required_stmt_it":  "Bibliotheca Hertziana – Istituto Max Planck per la storia dell'arte",
   "required_stmt_en":  "Bibliotheca Hertziana – Max Planck Institute for Art History",
+  "force_http_hosts": [],
   "fetch_delay":       0.3,
   "fallback_width":    1000,
   "fallback_height":   1000
