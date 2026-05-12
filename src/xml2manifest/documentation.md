@@ -217,6 +217,38 @@ The CSV can be opened in Excel or any spreadsheet application for editorial revi
 
 ---
 
+## Fetching image dimensions from internal servers
+
+By default the script fetches image dimensions by querying each image's
+`info.json` endpoint over HTTPS. If your IIIF image server is only reachable
+internally (e.g. via a `/etc/hosts` entry or an internal DNS name), HTTPS
+certificate validation will fail and the request will time out or error.
+
+To handle this, add the optional `force_http_hosts` key to your
+`manifest_config.json`:
+
+```json
+"force_http_hosts": ["fotothek.biblhertz.it"]
+```
+
+Any hostname listed there will be contacted over HTTP instead of HTTPS
+**for the `info.json` dimension fetch only**. The URLs written into the
+manifest itself are always taken verbatim from the XML source and are not
+modified — so the published manifest will still reference the correct
+public HTTPS addresses that viewers use.
+
+Multiple internal hostnames can be listed:
+
+```json
+"force_http_hosts": ["internal-cantaloupe.example.org", "images-dev.example.org"]
+```
+
+If the key is absent from the config file entirely, the script behaves as
+before and uses HTTPS for all requests. No changes to existing config files
+are required.
+
+---
+
 ## Troubleshooting
 
 **`✗ Config file not found`**
