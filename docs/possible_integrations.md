@@ -106,6 +106,11 @@ IIIF Presentation 3 supports a `Choice` body with multiple alternatives — for 
 - Generating the `Choice` body structure in the manifest
 - The image-tools viewer plugin to expose the switcher
 
+### 3.1b Rotation display is unreliable in most viewers — needs a real decision
+Confirmed by direct testing (2026-07-30): the image server correctly rotates at arbitrary angles when queried directly (not just 90° multiples — server capability is not the issue). But when the same rotated image URL is used as an annotation `body.id` in a manifest, most viewers fail to display the rotation at all, even at 90°. Working hypothesis: viewers that support deep zoom construct their own tile requests from the annotation body's `service` block (info.json-based), bypassing the literal `body.id` URL entirely — and `service` carries no rotation, so the baked-in rotation is silently dropped. Only Annona and TheseusViewer were found to correctly display rotation, and only via `ImageApiSelector` (a structured, declarative alternative to baking rotation into the request URL) — and only for single-image canvases, not multi-layer compositions.
+
+This affects both Comparison Layouts and Layer Alignment rotation. Needs a real design decision before further investment: whether to add `ImageApiSelector` as an opt-in export mode (narrow but real viewer support), keep the current approach with a clear warning (works directly against the Image API, fails in most viewers when embedded in a manifest), or something else (e.g. investigate whether omitting `service` for rotated bodies forces viewers to fall back to the literal `id` — untested). For now: a warning banner is shown in-app near the rotation controls in both tabs. Discussion deferred to implementation time.
+
 ### 3.2 IIIF Ranges (table of contents)
 Add a **Structure** section to the Comparison Layouts manifest that defines named ranges grouping canvases (for Simple multi-canvas manifests). Useful when a comparison covers multiple sections of a work.
 
@@ -163,7 +168,8 @@ If the user pastes a direct JPEG URL (not a IIIF service), attempt to read EXIF/
 | 2.1–2.3 Publink API + manifest server | High | High | Publink integration sprint |
 | 2.5 Data model unification (Publink remainder) | Low | High | Same sprint — standalone part done |
 | 1.2 Recipe 0326 layer annotations | Medium | High | After Publink, Layer Alignment v2 |
-| 3.1 Choice body | High | High | Layer Alignment v2 |
+| 3.1 Choice body | High | High | Layer Alignment v2 (Layer Alignment specifically — Comparison Layouts should stay simultaneous-composition per Cookbook 0036, not Choice) |
+| 3.1b Rotation display fix (ImageApiSelector decision) | Medium–High (design decision needed first) | High | Needs discussion before scoping — see write-up above |
 | 4.1 image-tools plugin | Low (viewer side) | High | Publink sprint |
 | 4.2 Curtain compare | High | Medium | Post-launch |
 | 3.5 Change Discovery API | Medium | Medium | When Publink is live |

@@ -648,6 +648,9 @@
             <p style="font-size:0.9rem; color:#555; margin-top:0;">Imported images are added to the library above so you can select a subset.</p>
 
             <h4 style="margin:20px 0 6px;">Selected for comparison</h4>
+            <div style="background:#fff3cd; border:1px solid #ffeaa7; color:#856404; padding:10px 14px; border-radius:6px; font-size:12.5px; margin-bottom:12px;">
+                <strong>⚠ Rotation display is currently unreliable in most viewers.</strong> This tool requests an already-rotated image from the IIIF server, but viewers that build their own tile requests from the image's <code>service</code> block (rather than fetching the literal image URL) can silently ignore that rotation. Verified: even a 90° rotation may not display correctly. Use rotation with this in mind until a more broadly-supported approach is added.
+            </div>
             <div class="image-list" id="comparisonImages">
                 <p><em>No images added yet. Import from the library above.</em></p>
             </div>
@@ -964,6 +967,9 @@
             <!-- Step 2: workspace -->
             <h3 style="margin-top:28px;">Step 2 — Align layers</h3>
             <p class="la-hint">Drag layers to reposition · drag corner handles to resize (hold Shift to lock aspect ratio) · arrow keys nudge 1 px (Shift = 10 px) · Delete removes selected layer.</p>
+            <div style="background:#fff3cd; border:1px solid #ffeaa7; color:#856404; padding:10px 14px; border-radius:6px; font-size:12.5px; margin-bottom:12px;">
+                <strong>⚠ Rotation display is currently unreliable in most viewers.</strong> This tool requests an already-rotated image from the IIIF server, but viewers that build their own tile requests from the image's <code>service</code> block (rather than fetching the literal image URL) can silently ignore that rotation. Verified: even a 90° rotation may not display correctly. Use rotation with this in mind until a more broadly-supported approach is added.
+            </div>
             <div style="margin-bottom:6px;">
                 <button class="button secondary" onclick="laSnapAllToCanvas()" style="font-size:12px; padding:5px 12px;">Snap all to canvas</button>
                 <span style="font-size:12px; color:#888; margin-left:8px;">Sets every layer to fill the full canvas area (useful before precise repositioning)</span>
