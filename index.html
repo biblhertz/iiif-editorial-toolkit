@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IIIF Editorial Toolkit</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --text: #1c2024;
+    --muted: #5b6470;
+    --border: #e1e4e8;
+    --accent: #2b5fa8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --surface: #1c1f24;
+      --text: #eaecef;
+      --muted: #9aa3ad;
+      --border: #2c3036;
+      --accent: #7ab0f2;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  header h1 {
+    font-size: 1.9em;
+    margin: 0 0 6px;
+  }
+  header p.tagline {
+    color: var(--muted);
+    margin: 0 0 32px;
+    max-width: 60ch;
+  }
+  .meta-links {
+    margin-bottom: 40px;
+    font-size: 0.95em;
+  }
+  .meta-links a { margin-right: 16px; }
+  section.group {
+    margin-bottom: 40px;
+  }
+  section.group h2 {
+    font-size: 1.05em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+  .tool-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+  .tool-card:hover { border-color: var(--accent); }
+  .tool-card h3 {
+    margin: 0 0 4px;
+    font-size: 1.05em;
+    color: var(--accent);
+  }
+  .tool-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.94em;
+  }
+  .tool-card .path {
+    display: block;
+    margin-top: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8em;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  .python-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--muted);
+    font-size: 0.94em;
+  }
+  a { color: var(--accent); }
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>IIIF Editorial Toolkit</h1>
+    <p class="tagline">Self-contained, single-file HTML tools for creating, viewing, and managing IIIF manifests in academic and scholarly contexts. Developed at the Bibliotheca Hertziana &ndash; Max Planck Institute for Art History. Every tool below runs entirely in your browser &mdash; nothing is uploaded, nothing is installed.</p>
+    <div class="meta-links">
+      <a href="https://github.com/biblhertz/iiif-editorial-toolkit">Source on GitHub</a>
+      <a href="https://github.com/biblhertz/iiif-editorial-toolkit/tree/main/docs">Documentation</a>
+    </div>
+  </header>
+
+  <section class="group">
+    <h2>Manifest Generation</h2>
+    <a class="tool-card" href="src/generator/iiif_generator.html">
+      <h3>IIIF Manifest Generator</h3>
+      <p>The main tool. Five tabs: Individual Images, Comparison Layouts, Layer Alignment, Manifest Library, and Validation &amp; Testing.</p>
+      <span class="path">src/generator/iiif_generator.html</span>
+    </a>
+    <a class="tool-card" href="src/openseadragon/osd_generator.html">
+      <h3>OpenSeadragon Generator</h3>
+      <p>Simplified single-canvas compositions optimized for OpenSeadragon. Good for quick manifests and teaching materials.</p>
+      <span class="path">src/openseadragon/osd_generator.html</span>
+    </a>
+  </section>
+
+  <section class="group">
+    <h2>Viewing &amp; Testing</h2>
+    <a class="tool-card" href="src/openseadragon/osd_viewer.html">
+      <h3>OpenSeadragon Viewer</h3>
+      <p>High-performance viewing with multi-canvas navigation and automatic manifest type detection.</p>
+      <span class="path">src/openseadragon/osd_viewer.html</span>
+    </a>
+    <a class="tool-card" href="src/viewer/iiif_viewer.html">
+      <h3>Multi-Viewer Testing Tool</h3>
+      <p>Test manifest compatibility across Mirador 3 and TheseusViewer, with manifest validation.</p>
+      <span class="path">src/viewer/iiif_viewer.html</span>
+    </a>
+    <a class="tool-card" href="src/size_updater/IIIF_manifest_dimension_updater.html">
+      <h3>Manifest Dimension Updater</h3>
+      <p>Batch-fetches real image dimensions from each info.json and fixes placeholder sizes in an existing manifest.</p>
+      <span class="path">src/size_updater/IIIF_manifest_dimension_updater.html</span>
+    </a>
+  </section>
+
+  <section class="group">
+    <h2>Content State (Deep Links)</h2>
+    <a class="tool-card" href="src/contentstate/iiif_contentstate_generator.html">
+      <h3>Content State Generator</h3>
+      <p>Build a shareable deep link into a single region of an image, with a pan/zoom preview. Note: Mirador 3 does not support Content State &mdash; use the companion viewers below or TheseusViewer.</p>
+      <span class="path">src/contentstate/iiif_contentstate_generator.html</span>
+    </a>
+    <a class="tool-card" href="src/contentstate/iiif_viewer.html">
+      <h3>Content State Test Viewer</h3>
+      <p>Debug viewer for checking a generated Content State before publishing.</p>
+      <span class="path">src/contentstate/iiif_viewer.html</span>
+    </a>
+    <a class="tool-card" href="src/contentstate/minimal_iiif_viewer.html">
+      <h3>Minimal Content State Viewer</h3>
+      <p>Stripped-down viewer meant for embedding a Content State deep link in a published article.</p>
+      <span class="path">src/contentstate/minimal_iiif_viewer.html</span>
+    </a>
+  </section>
+
+  <section class="group">
+    <h2>Editorial Workflow</h2>
+    <a class="tool-card" href="src/jats_alternatives/jats-alternatives-generator.html">
+      <h3>JATS Alternatives Generator</h3>
+      <p>Generates paired JATS &lt;alternatives&gt; graphic blocks (online IIIF + local archival reference) for article figures.</p>
+      <span class="path">src/jats_alternatives/jats-alternatives-generator.html</span>
+    </a>
+    <div class="python-note">
+      <strong>XML &rarr; Manifest Suite</strong> is a Python pipeline (not a browser tool) that converts a JATS XML article directly into a manifest. See <a href="https://github.com/biblhertz/iiif-editorial-toolkit/tree/main/src/xml2manifest">src/xml2manifest/</a> and its own readme.
+    </div>
+  </section>
+
+  <footer>
+    IIIF Presentation API 3.0 &middot; IIIF Image API 2.1/3.0 &middot; MIT License &middot; <a href="https://github.com/biblhertz/iiif-editorial-toolkit">biblhertz/iiif-editorial-toolkit</a>
+  </footer>
+</main>
+</body>
+</html>
