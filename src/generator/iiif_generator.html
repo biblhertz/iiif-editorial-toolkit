@@ -3879,6 +3879,33 @@
             setTimeout(() => laShowMsg(''), 2000);
         }
 
+        // Axis-aligned bounding box of a w x h rectangle rotated by deg degrees.
+        // Generalizes the old 90/270-only swap to any angle (exact match at 0/90/180/270).
+        function rotatedBounds(w, h, deg) {
+            const rad = (deg || 0) * Math.PI / 180;
+            const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+            return { w: w * c + h * s, h: w * s + h * c };
+        }
+
+        // Inverse of rotatedBounds: given a target bounding box, solve for the
+        // pre-rotation content size at this angle. The system is singular at
+        // odd multiples of 45 degrees (bounding box alone can't determine both
+        // dimensions there) — falls back to scaling fallbackW/fallbackH's own
+        // aspect ratio to match the target box's area.
+        function contentSizeForBounds(bw, bh, deg, fallbackW, fallbackH) {
+            const rad = (deg || 0) * Math.PI / 180;
+            const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+            const det = c * c - s * s;
+            if (Math.abs(det) < 0.001) {
+                const scale = Math.sqrt((bw * bh) / Math.max(1, fallbackW * fallbackH));
+                return { w: Math.max(1, fallbackW * scale), h: Math.max(1, fallbackH * scale) };
+            }
+            return {
+                w: Math.max(1, (bw * c - bh * s) / det),
+                h: Math.max(1, (bh * c - bw * s) / det)
+            };
+        }
+
         function laDeriveServiceId(url) {
             url = url.trim().replace(/\/info\.json$/, '').replace(/\/$/, '');
             const m = url.match(/^(.+?)\/(?:full|square|pct:|[\d]+,[\d]*|,[\d]+)/);
@@ -3970,9 +3997,9 @@
             const l = laLayers.find(l => l.id === id);
             if (!l) return;
             laPushUndo();
-            const transposed = l.rotation === 90 || l.rotation === 270;
-            l.w = transposed ? l.nh : l.nw;
-            l.h = transposed ? l.nw : l.nh;
+            const bounds = rotatedBounds(l.nw, l.nh, l.rotation || 0);
+            l.w = bounds.w;
+            l.h = bounds.h;
             laPosDiv(l); laRenderPanel(); saveLayerSession();
         }
 
@@ -3987,9 +4014,10 @@
             laPushUndo();
             const oldRot = l.rotation || 0;
             const newRot = ((oldRot + delta) % 360 + 360) % 360;
-            const wasTransposed = oldRot === 90 || oldRot === 270;
-            const isTransposed  = newRot === 90 || newRot === 270;
-            if (wasTransposed !== isTransposed) { const tmp = l.w; l.w = l.h; l.h = tmp; }
+            const oldBounds = rotatedBounds(l.nw, l.nh, oldRot);
+            const newBounds = rotatedBounds(l.nw, l.nh, newRot);
+            l.w = newBounds.w * (l.w / oldBounds.w);
+            l.h = newBounds.h * (l.h / oldBounds.h);
             l.rotation = newRot;
             laPosDiv(l);
             laRenderPanel();
@@ -4002,9 +4030,10 @@
             laPushUndo();
             const newRot = Math.round(((+val) % 360 + 360) % 360);
             const oldRot = l.rotation || 0;
-            const wasTransposed = oldRot === 90 || oldRot === 270;
-            const isTransposed  = newRot === 90 || newRot === 270;
-            if (wasTransposed !== isTransposed) { const tmp = l.w; l.w = l.h; l.h = tmp; }
+            const oldBounds = rotatedBounds(l.nw, l.nh, oldRot);
+            const newBounds = rotatedBounds(l.nw, l.nh, newRot);
+            l.w = newBounds.w * (l.w / oldBounds.w);
+            l.h = newBounds.h * (l.h / oldBounds.h);
             l.rotation = newRot;
             laPosDiv(l);
             laRenderPanel();
@@ -4255,9 +4284,8 @@
         function laWrapperStyle(layer) {
             const r = layer.rotation || 0;
             const s = laScale;
-            const needsSwap = r === 90 || r === 270;
-            const pw = needsSwap ? layer.h : layer.w;
-            const ph = needsSwap ? layer.w : layer.h;
+            const content = contentSizeForBounds(layer.w, layer.h, r, layer.nw, layer.nh);
+            const pw = content.w, ph = content.h;
             const top  = (layer.h - ph) / 2;
             const left = (layer.w - pw) / 2;
             const flip = layer.flipH ? ' scaleX(-1)' : '';
@@ -4399,9 +4427,9 @@
                     "items": [{
                         "id": `${baseUrl}/${mid}/page/1`, "type": "AnnotationPage",
                         "items": laLayers.map((layer, i) => {
-                            const transposed = layer.rotation === 90 || layer.rotation === 270;
-                            const bodyW = transposed ? layer.nh : layer.nw;
-                            const bodyH = transposed ? layer.nw : layer.nh;
+                            const nativeBounds = rotatedBounds(layer.nw, layer.nh, layer.rotation || 0);
+                            const bodyW = Math.round(nativeBounds.w);
+                            const bodyH = Math.round(nativeBounds.h);
                             const body = {
                                 "id":     `${layer.serviceId}/full/max/${layer.flipH ? '!' : ''}${layer.rotation || 0}/default.jpg`,
                                 "type":   "Image", "format": "image/jpeg",
