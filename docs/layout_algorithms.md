@@ -30,31 +30,6 @@ The toolkit uses intelligent algorithms to position images within IIIF manifests
 
 **Purpose**: Basic side-by-side comparison
 
-**Algorithm**:
-```javascript
-function horizontalLayout(images, padding) {
-  const positions = [];
-  let x = padding;
-  const maxHeight = Math.max(...images.map(img => img.height));
-  
-  images.forEach(img => {
-    positions.push({
-      x: x,
-      y: padding + (maxHeight - img.height) / 2, // Center vertically
-      width: img.width,
-      height: img.height
-    });
-    x += img.width + padding;
-  });
-  
-  return {
-    canvasWidth: x,
-    canvasHeight: maxHeight + (padding * 2),
-    positions
-  };
-}
-```
-
 **Characteristics**:
 - Maintains original aspect ratios
 - Vertically centers images
@@ -69,33 +44,6 @@ function horizontalLayout(images, padding) {
 ### 2. Horizontal Balanced Layout
 
 **Purpose**: Equal-height comparison for detailed analysis
-
-**Algorithm**:
-```javascript
-function horizontalBalancedLayout(images, padding, targetHeight) {
-  const positions = [];
-  let x = padding;
-  
-  images.forEach(img => {
-    const scale = targetHeight / img.height;
-    const scaledWidth = Math.round(img.width * scale);
-    
-    positions.push({
-      x: x,
-      y: padding,
-      width: scaledWidth,
-      height: targetHeight
-    });
-    x += scaledWidth + padding;
-  });
-  
-  return {
-    canvasWidth: x,
-    canvasHeight: targetHeight + (padding * 2),
-    positions
-  };
-}
-```
 
 **Characteristics**:
 - All images scaled to same height
@@ -112,103 +60,14 @@ function horizontalBalancedLayout(images, padding, targetHeight) {
 
 **Purpose**: Optimized viewing experience with aspect ratio consideration
 
-**Algorithm**:
-```javascript
-function storyboardLayout(images, padding, targetHeight) {
-  const positions = [];
-  let x = padding;
-  
-  // Scale images to target height
-  const scaledImages = images.map(img => ({
-    ...img,
-    scaledWidth: Math.round(img.width * (targetHeight / img.height)),
-    scaledHeight: targetHeight
-  }));
-  
-  // Calculate total width
-  const totalWidth = scaledImages.reduce((sum, img) => sum + img.scaledWidth, 0);
-  let canvasWidth = totalWidth + (padding * (images.length + 1));
-  
-  // Prevent overly wide canvases (max 3:1 ratio)
-  const maxWidth = targetHeight * 3;
-  if (canvasWidth > maxWidth) {
-    const scaleDown = maxWidth / canvasWidth;
-    canvasWidth = maxWidth;
-    scaledImages.forEach(img => {
-      img.scaledWidth = Math.round(img.scaledWidth * scaleDown);
-    });
-  }
-  
-  // Position images
-  scaledImages.forEach(img => {
-    positions.push({
-      x: x,
-      y: padding,
-      width: img.scaledWidth,
-      height: img.scaledHeight
-    });
-    x += img.scaledWidth + padding;
-  });
-  
-  return {
-    canvasWidth,
-    canvasHeight: targetHeight + (padding * 2),
-    positions
-  };
-}
-```
-
 **Characteristics**:
-- Prevents overly wide canvases
-- Maintains readability
+- Fixed target height, consistent readability across images
 - Optimizes for viewing experience
 - Good for: Presentations, teaching
 
 ### 4. Main + Derivatives Layout
 
 **Purpose**: Hierarchical display with primary image and supporting details
-
-**Algorithm**:
-```javascript
-function mainDerivativesLayout(images, padding) {
-  const positions = [];
-  const mainImg = images[0];
-  const derivatives = images.slice(1);
-  
-  // Position main image
-  positions.push({
-    x: padding,
-    y: padding,
-    width: mainImg.width,
-    height: mainImg.height
-  });
-  
-  // Calculate derivative dimensions
-  const derivativeWidth = derivatives.length > 0 ? 
-    Math.floor((mainImg.width - (padding * (derivatives.length - 1))) / derivatives.length) : 0;
-  const derivativeHeight = Math.round(derivativeWidth * 0.75); // 4:3 aspect ratio
-  
-  // Position derivatives
-  let derivX = padding;
-  const derivY = mainImg.height + (padding * 2);
-  
-  derivatives.forEach(img => {
-    positions.push({
-      x: derivX,
-      y: derivY,
-      width: derivativeWidth,
-      height: derivativeHeight
-    });
-    derivX += derivativeWidth + padding;
-  });
-  
-  return {
-    canvasWidth: mainImg.width + (padding * 2),
-    canvasHeight: mainImg.height + derivativeHeight + (padding * 3),
-    positions
-  };
-}
-```
 
 **Characteristics**:
 - Hierarchical arrangement
@@ -220,69 +79,14 @@ function mainDerivativesLayout(images, padding) {
 
 **Purpose**: Systematic comparison in grid format
 
-**Algorithm**:
-```javascript
-function gridLayout(images, padding, cellWidth, cellHeight) {
-  const positions = [];
-  const gridSize = Math.ceil(Math.sqrt(images.length));
-  
-  images.forEach((img, index) => {
-    const row = Math.floor(index / gridSize);
-    const col = index % gridSize;
-    
-    positions.push({
-      x: padding + (col * (cellWidth + padding)),
-      y: padding + (row * (cellHeight + padding)),
-      width: cellWidth,
-      height: cellHeight
-    });
-  });
-  
-  const canvasWidth = (cellWidth * gridSize) + (padding * (gridSize + 1));
-  const canvasHeight = (cellHeight * gridSize) + (padding * (gridSize + 1));
-  
-  return {
-    canvasWidth,
-    canvasHeight,
-    positions
-  };
-}
-```
-
 **Characteristics**:
-- Equal-sized cells
+- Fixed 2×2 grid, equal-sized cells sized from the canvas dimensions
 - Systematic arrangement
-- Scalable to any number of images
 - Good for: Systematic comparisons
 
 ### 6. Vertical Stack Layout
 
 **Purpose**: Chronological or sequential vertical arrangement
-
-**Algorithm**:
-```javascript
-function verticalStackLayout(images, padding) {
-  const positions = [];
-  let y = padding;
-  const maxWidth = Math.max(...images.map(img => img.width));
-  
-  images.forEach(img => {
-    positions.push({
-      x: padding + Math.round((maxWidth - img.width) / 2), // Center horizontally
-      y: y,
-      width: img.width,
-      height: img.height
-    });
-    y += img.height + padding;
-  });
-  
-  return {
-    canvasWidth: maxWidth + (padding * 2),
-    canvasHeight: y,
-    positions
-  };
-}
-```
 
 **Characteristics**:
 - Vertical arrangement
@@ -345,19 +149,6 @@ function adaptiveScale(images, canvasWidth, canvasHeight, padding) {
 
 ### Quality Considerations
 
-#### Resolution Matching
-```javascript
-function calculateOptimalResolution(images, targetViewingSize) {
-  const avgDPI = images.reduce((sum, img) => sum + img.dpi, 0) / images.length;
-  const targetDPI = Math.min(avgDPI, 300); // Max 300 DPI for web
-  
-  return {
-    width: Math.round(targetViewingSize.width * (targetDPI / 72)),
-    height: Math.round(targetViewingSize.height * (targetDPI / 72))
-  };
-}
-```
-
 #### Detail Preservation
 - **Minimum size**: Ensure smallest image is readable
 - **Maximum size**: Prevent unnecessary scaling
@@ -388,64 +179,6 @@ function calculateOptimalResolution(images, targetViewingSize) {
 | Grid 2x2 | Square | Medium | Fast |
 | Vertical Stack | Tall | Medium | Medium |
 
-## 🔍 Advanced Techniques
-
-### Dynamic Positioning
-```javascript
-function dynamicLayout(images, viewerCapabilities) {
-  const layout = detectOptimalLayout(images, viewerCapabilities);
-  
-  switch (layout.type) {
-    case 'detail-focused':
-      return horizontalBalancedLayout(images, layout.padding, layout.targetHeight);
-    case 'overview-focused':
-      return storyboardLayout(images, layout.padding, layout.targetHeight);
-    case 'hierarchical':
-      return mainDerivativesLayout(images, layout.padding);
-    default:
-      return horizontalLayout(images, layout.padding);
-  }
-}
-```
-
-### Responsive Positioning
-```javascript
-function responsiveLayout(images, screenSize) {
-  const isMobile = screenSize.width < 768;
-  const isTablet = screenSize.width < 1024;
-  
-  if (isMobile) {
-    return verticalStackLayout(images, 50); // Smaller padding
-  } else if (isTablet) {
-    return storyboardLayout(images, 75, 400); // Smaller target height
-  } else {
-    return horizontalBalancedLayout(images, 100, 600);
-  }
-}
-```
-
-### Viewer-Specific Optimization
-```javascript
-function optimizeForViewer(layout, viewerType) {
-  switch (viewerType) {
-    case 'mirador':
-      return {
-        ...layout,
-        targetFormat: 'string', // Use string targets
-        coordinateSystem: 'percentage'
-      };
-    case 'openseadragon':
-      return {
-        ...layout,
-        targetFormat: 'object', // Use object targets
-        coordinateSystem: 'pixel'
-      };
-    default:
-      return layout;
-  }
-}
-```
-
 ## 💡 Best Practices
 
 ### Algorithm Selection
@@ -468,4 +201,4 @@ function optimizeForViewer(layout, viewerType) {
 
 ---
 
-**Next:** [IIIF Compliance](./iiif-compliance.md) | [API Reference](./api-reference.md)
+**See also:** [IIIF Compliance](./iiif_compliance.md) | [Generator Guide](./generator_guide.md)

@@ -1,192 +1,130 @@
 # IIIF Editorial Toolkit
 
-A comprehensive suite of tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts.
+A suite of self-contained, single-file HTML tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts. Developed at the [Bibliotheca Hertziana – Max Planck Institute for Art History](https://www.biblhertz.it), Rome.
 
 ## The History Behind
+
 This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than generating a composition in a photo editor for Art History academic digital publications. After testing what was available, I decided that what I needed was nowere to be found and started a complex jurney with the support of an artificial intelligence (Claude Sonnet 4 by Anthropic). Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kind of. The viewer was added as a quick way to check the code, and it is a Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
 
 For this reason I double checked the IIIF Multi-Image cookbook and found that the OSD manifest had a totally different approach. I asked to rebuilt everything in a new version. If you think this might be interesting or useful, you can read the full description below.
 
 Please note that you need to know your IIIF image api link (the info.json), to be able to create a composition manifest. Also, for very complex layouts, it is faster to do a mockup in Illustrator and then insert the coordinates (xywh) of each element than hoping for a preset to fit your needs.
 
-## 🚀 Quick Start
+## Quick Start
 
-### Demo (to be added)
-Visit our [live demo](https://biblhertz.github.io/iiif-editorial-toolkit/) to try all tools without installation.
-
-### Local Setup
 ```bash
 git clone https://github.com/biblhertz/iiif-editorial-toolkit.git
 cd iiif-editorial-toolkit
 # Open any HTML file in your browser - no build step required!
 ```
 
-## 📚 Project Structure
+No installation, no server, no internet connection required to run any of the browser tools.
+
+## Project Structure
 
 ```
 iiif-editorial-toolkit/
-├── demo/                        # GitHub Pages demo site (TBD)
-├── docs/                        # Documentation 
-├── src/                         # The code 
-│   ├── generator/               # Manifest generation tools
-│   │   ├── iiif_generator.html  # Enhanced academic generator
-│   │   └── osd_generator.html   # OpenSeadragon-focused generator
-│   ├── size_updater             # Manifest image size updater
-│   │   └── IIIF_manifest_dimension_updater.html      # quick tool for quering image size from IIIF server
-│   ├── openseadragon/           # OpenSeadragon viewer
-│   │   ├── osd_generator.html   # OpenSeadragon-focused generator
-│   │   └── osd_viewer.html      # Specialized OSD viewer
-│   └── viewer/                  # Multi-viewer testing tools
-│       └── iiif_viewer.html     # Multi-viewer comparison tool
-└── README.md                    # This file
+├── docs/                          # Documentation
+├── src/
+│   ├── generator/
+│   │   └── iiif_generator.html    # Main manifest generator (5 tabs, see below)
+│   ├── openseadragon/
+│   │   ├── osd_generator.html     # OpenSeadragon-focused generator
+│   │   └── osd_viewer.html        # Specialized OSD viewer
+│   ├── size_updater/
+│   │   └── IIIF_manifest_dimension_updater.html  # Fetch real image sizes into an existing manifest
+│   ├── viewer/
+│   │   └── iiif_viewer.html       # Multi-viewer compatibility tester (Mirador 3 / TheseusViewer)
+│   ├── contentstate/
+│   │   ├── iiif_contentstate_generator.html  # IIIF Content State (deep-link) generator, with pan/zoom preview
+│   │   ├── iiif_viewer.html                  # Test viewer for generated content states
+│   │   └── minimal_iiif_viewer.html          # Clean viewer for embedding content states in articles
+│   ├── jats_alternatives/
+│   │   └── jats-alternatives-generator.html  # Generates JATS <alternatives> graphic blocks for HSAH figures
+│   └── xml2manifest/              # JATS XML → IIIF manifest pipeline (Python)
+└── README.md
 ```
 
-## 🛠️ Tools Overview
+## Tools Overview
 
-### 1. III Manifest Generator (`iiif_generator.html`)
-**Best for:** Complex academic projects with multiple comparison layouts
+### 1. IIIF Manifest Generator (`src/generator/iiif_generator.html`)
+**Best for:** the full manifest lifecycle, from a single image to a complex scholarly comparison.
 
-**Features:**
-- Dual manifest generation (Universal + Simple)
-- Advanced layout algorithms (6 layout types)
-- Viewer compatibility optimization
-- Manifest library management
-- Auto-fetch IIIF image information
-- Validation and testing tools
+A single HTML file with five tabs:
 
-**Use Cases:**
-- Art history comparisons
-- Manuscript analysis
-- Multi-image scholarly publications
-- Complex positioning requirements
+| Tab | Purpose |
+|---|---|
+| Individual Images | Generate a single-image manifest with full scholarly metadata |
+| Comparison Layouts | Build a multi-image manifest from library items using preset layout algorithms |
+| Layer Alignment | Position images of different sizes on a shared canvas and export as a layered manifest |
+| Manifest Library | Manage, edit, duplicate, export, and import your manifest collection |
+| Validation & Testing | Check any manifest for IIIF compliance and open it in viewers |
 
-### 2. OpenSeadragon Generator (`osd_generator.html`)
-**Best for:** Single-canvas compositions optimized for OpenSeadragon
+**No dependencies** — uses only standard browser APIs:
 
-**Features:**
-- OpenSeadragon-specific optimizations
-- Simplified comparison layouts
-- Canvas-based positioning
-- Library management
-- Clean, focused interface
+| API | Purpose |
+|---|---|
+| Web Crypto API (`crypto.subtle`) | SHA-256 manifest ID generation from title |
+| Fetch API | Manifest import, `info.json` dimension fetch |
+| `localStorage` | Library persistence; comparison and layer session restore |
+| Clipboard API (`navigator.clipboard`) | Copy manifest JSON or URL to clipboard |
+| Blob / `URL.createObjectURL` | JSON file download |
 
-**Use Cases:**
-- Simple image comparisons
-- OpenSeadragon-focused projects
-- Quick manifest creation
-- Teaching materials
+**Note on CORS:** IIIF images are online resources by definition. Some institutional image servers block browser-side `fetch` requests for `info.json` (cross-origin policy). If auto-fetch fails, image dimensions can be entered manually — the generated manifest is unaffected, since IIIF viewers fetch images directly from the server.
 
-### 3. OpenSeadragon Viewer (`osd_viewer.html`)
-**Best for:** High-performance viewing with detailed navigation
+**Use Cases:** art history comparisons, manuscript analysis, multi-image scholarly publications, complex positioning requirements.
 
-**Features:**
-- Multi-canvas navigation
-- Positioned composition support
-- Automatic manifest type detection
-- Advanced zoom and pan controls
-- Intelligent manifest parsing
+### 2. OpenSeadragon Generator (`src/openseadragon/osd_generator.html`)
+**Best for:** single-canvas compositions optimized for OpenSeadragon.
 
-**Use Cases:**
-- Detailed image analysis
-- High-resolution viewing
-- Sequential image navigation
-- Research presentations
+Simplified comparison layouts, canvas-based positioning, library management. Good for quick manifest creation and teaching materials.
 
-### 4. Multi-Viewer Testing Tool (`iiif_viewer.html`)
-**Best for:** Testing manifest compatibility across different viewers
+### 3. OpenSeadragon Viewer (`src/openseadragon/osd_viewer.html`)
+**Best for:** high-performance viewing with detailed navigation.
 
-**Features:**
-- Mirador 3 integration
-- TheseusViewer support
-- Manifest validation
-- Compatibility testing
-- Quick viewer switching
+Multi-canvas navigation, positioned composition support, automatic manifest type detection, advanced zoom/pan.
 
-**Use Cases:**
-- Manifest validation
-- Cross-viewer testing
-- Compatibility verification
-- Quality assurance
+### 4. Multi-Viewer Testing Tool (`src/viewer/iiif_viewer.html`)
+**Best for:** testing manifest compatibility across different viewers.
 
-## 🔄 Workflows
+Mirador 3 and TheseusViewer integration, manifest validation, quick viewer switching.
 
-### OpenSeadragon Workflow
-Perfect for detailed image analysis and research:
+### 5. Manifest Dimension Updater (`src/size_updater/IIIF_manifest_dimension_updater.html`)
+**Best for:** fixing placeholder or unknown image dimensions in an already-generated manifest.
 
-1. **Generate Individual Manifests**
-   - Use `osd_generator.html` 
-   - Auto-fetch image dimensions
-   - Save to library
+Batch-fetches real dimensions from each image's `info.json` and updates both Canvas and Image body sizes. Drag-and-drop interface with progress tracking.
 
-2. **Create Comparisons**
-   - Import from library
-   - Choose layout type
-   - Generate OpenSeadragon-optimized manifest
+### 6. XML → Manifest Suite (`src/xml2manifest/`)
+**Best for:** editorial teams converting JATS XML articles into manifests without touching the generator UI.
 
-3. **View Results**
-   - Use `osd_viewer.html`
-   - Navigate with full OSD controls
-   - Export or share manifest
+A Python pipeline (`xml-to-manifest.py` + `manifest_config.json` + `fig-extractor.py`) that converts a JATS XML article into a IIIF Presentation API 3.0 manifest in one automated pass, fetching real image dimensions from the IIIF server. See `src/xml2manifest/readme.md`.
 
-### IIIF Cookbook Workflow
-Ideal for complex academic publications:
+### 7. IIIF Content State Generator (`src/contentstate/`)
+**Best for:** generating a shareable deep-link (IIIF Content State) into a single region or view of an image, for citing a detail in an article.
 
-1. **Generate Academic Manifests**
-   - Use `iiif_generator.html`
-   - Create individual image manifests
-   - Build manifest library
+`iiif_contentstate_generator.html` builds and encodes a IIIF Content State, with a pan/zoom canvas preview (drag to pan, +/−/reset controls) for framing the target region before sharing. It links out to two companion viewers included in the same folder: `iiif_viewer.html` (a test/debug viewer for the generated content state) and `minimal_iiif_viewer.html` (a stripped-down viewer meant for embedding in published articles). Note these are unrelated to `src/viewer/iiif_viewer.html` (tool #4, the multi-viewer compatibility tester) despite the shared filename. **Important:** Mirador 3 does not support Content State — only TheseusViewer and the two companion viewers here do. See the [Content State Guide](./docs/contentstate_guide.md).
 
-2. **Create Advanced Comparisons**
-   - Select viewer compatibility (Universal/Simple/Dual)
-   - Choose from 6 layout algorithms
-   - Fine-tune positioning
+### 8. JATS Alternatives Generator (`src/jats_alternatives/jats-alternatives-generator.html`)
+**Best for:** editorial staff preparing HSAH article XML, pairing each figure's online (IIIF) and archival image references.
 
-3. **Test Compatibility**
-   - Use `iiif_viewer.html`
-   - Test in Mirador 3 and TheseusViewer
-   - Validate IIIF compliance
+A standalone, no-network local tool that generates paired JATS `<graphic>` blocks wrapped in `<alternatives>` — one pointing to the Hertziana IIIF endpoint, one to the local archival file — ready to paste into article XML in place of a bare `<graphic>`. Supports sequential ranges and a custom list mode for reconciling author-numbered figures (e.g. `3a`/`3b`) against sequentially-exported filenames. See the [JATS Alternatives Generator doc](./docs/jats-alternatives-generator.md).
 
-4. **Deploy**
-   - Download manifests
-   - Host on your server
-   - Integrate with publication
+## Detailed Documentation
 
-## 📖 Detailed Documentation
+- [Generator Guide](./docs/generator_guide.md) — complete guide to manifest generation
+- [Content State Guide](./docs/contentstate_guide.md) — deep links into a canvas region, viewer compatibility caveats
+- [Viewer Guide](./docs/viewer_guide.md) — using the viewers effectively
+- [Multi-Viewer Tester Manual](./docs/multi_viewer_tester_manual.md)
+- [OSD Viewer Documentation](./docs/osd_viewer_documentation.md)
+- [Manifest Dimension Updater](./docs/IIIF_manifest_dimension_updater_readme.md)
+- [Publishing on GitHub Pages](./docs/github_pages_guide.md) — serve your manifests publicly for free
+- [Layout Algorithms](./docs/layout_algorithms.md) — understanding positioning systems
+- [IIIF Compliance](./docs/iiif_compliance.md) — standards and best practices
+- [Examples](./docs/examples.md) — coded examples and use cases
+- [Possible Integrations](./docs/possible_integrations.md) — prioritised list of future features
+- [JATS Alternatives Generator](./docs/jats-alternatives-generator.md) — pairing online/archival graphic references for HSAH figures
 
-- [Generator Guide](./docs/generator_guide.md) - Complete guide to manifest generation
-- [Viewer Guide](./docs/viewer_guide.md) - Using the viewers effectively
-- [Layout Algorithms](./docs/layout_algorithms.md) - Understanding positioning systems
-- [IIIF Compliance](./docs/iiif_compliance.md) - Standards and best practices
-- [API Reference](./docs/api_reference.md) - Technical specifications
-- [Examples](./docs/examples.md) - Coded examples and use cases
-
-## 🎯 Use Cases
-
-### Art History Research
-- Compare artistic works across collections
-- Analyze details and variations
-- Create scholarly annotations
-- Present findings interactively
-
-### Manuscript Studies
-- Multi-page manuscript navigation
-- Parallel text comparison
-- Paleographic analysis
-- Collaborative annotation
-
-### Digital Humanities
-- Cultural heritage preservation
-- Interactive exhibitions
-- Educational resources
-- Research publications
-
-### Academic Publishing
-- Illustrated scholarly articles
-- Interactive figures
-- Comparative analysis
-- Peer review materials
-
-## 🔧 Technical Requirements
+## Technical Requirements
 
 ### Browser Support
 - Chrome 70+ (recommended)
@@ -197,14 +135,13 @@ Ideal for complex academic publications:
 ### IIIF Compliance
 - IIIF Presentation API 3.0
 - IIIF Image API 2.1/3.0
-- IIIF Authentication (planned)
 
 ### Dependencies
-- OpenSeadragon 4.1.0 (CDN)
-- No build process required
-- Pure HTML/CSS/JavaScript
+- `src/generator/iiif_generator.html`, `src/size_updater/IIIF_manifest_dimension_updater.html`, and `src/viewer/iiif_viewer.html` are pure HTML/CSS/JavaScript with no third-party libraries.
+- `src/openseadragon/*` uses OpenSeadragon 4.1.0 via CDN.
+- `src/xml2manifest/*` requires Python 3.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -212,23 +149,17 @@ Ideal for complex academic publications:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [IIIF Community](https://iiif.io/) for standards and specifications
 - [OpenSeadragon](https://openseadragon.github.io/) for the viewer library
 - [Mirador](https://projectmirador.org/) for viewer integration
 - [TheseusViewer](https://theseusviewer.org/) for comparison viewing
 
-## 📞 Support
-
-- Create an [issue](https://github.com/yourusername/iiif-editorial-toolkit/issues)
-- Check the [documentation](./docs/)
-- Join the [IIIF Community](https://iiif.io/community/)
-
 ---
 
-**Made with ❤️ and Claude Sonnet 4 for the academic editorial community**
+**Made with ❤️ and Claude for the academic editorial community**

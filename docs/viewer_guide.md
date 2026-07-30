@@ -306,12 +306,6 @@ Complete guide to using the IIIF viewers for academic research and analysis.
 </iframe>
 ```
 
-### LMS Integration
-- **Moodle**: Embed as external tool
-- **Canvas**: Add as external app
-- **Blackboard**: Use building blocks
-- **Custom**: Create wrapper applications
-
 ### Publication Integration
 - **Journal articles**: Embed interactive figures
 - **Digital editions**: Provide manuscript viewing
@@ -320,4 +314,4 @@ Complete guide to using the IIIF viewers for academic research and analysis.
 
 ---
 
-**Next:** [Layout Algorithms](./layout-algorithms.md) | [IIIF Compliance](./iiif-compliance.md)
+**See also:** [Layout Algorithms](./layout_algorithms.md) | [IIIF Compliance](./iiif_compliance.md)

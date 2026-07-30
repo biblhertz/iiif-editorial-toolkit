@@ -9,7 +9,7 @@ The IIIF Multi-Viewer Tester is a comprehensive testing tool that allows you to 
 ## Interface Overview
 
 ### 🎭 **Viewer Selection Tabs**
-The tool features three primary viewer options:
+The tool features two viewer options, switched via tabs (each tab loads the current manifest into an iframe pointing at that viewer's public embed URL):
 
 #### **🎭 Mirador 3**
 - Advanced IIIF viewer with full annotation support
@@ -21,10 +21,7 @@ The tool features three primary viewer options:
 - Confirmed compatibility with cookbook-format manifests
 - Optimized for academic image comparison
 
-#### **🌊 OpenSeadragon**
-- High-performance image viewer with custom integration
-- Built-in manifest parsing for different types
-- Limited composition support, excellent for single images
+For OpenSeadragon-based viewing, use the separate `src/openseadragon/osd_viewer.html` tool — it is not one of this tester's tabs.
 
 ---
 
@@ -35,21 +32,16 @@ The tool features three primary viewer options:
 #### **Method 1: Quick Test Manifests**
 1. Use the **"Quick Test Manifests"** dropdown
 2. Select from pre-configured options:
-   - **Your Cookbook Manifest** - Pre-loaded example
+   - **Your Cookbook Manifest** - Placeholder for your own manifest URL
+   - **IIIF Cookbook - Basic Image** - Standard single-image example
    - **IIIF Cookbook - Multiple Images** - Standard multi-image example
    - **IIIF Cookbook - Annotations** - Annotation testing
-   - **Bodleian Library** - Real-world example
-3. Click **"📋 Load Selected"**
+3. Click **"🚀 Load Manifest"** (the same button used for all three loading methods)
 
 #### **Method 2: Custom Manifest URL**
 1. Enter your manifest URL in the **"Your Manifest URL"** field
 2. Click **"🚀 Load Manifest"**
 3. Monitor the status panel for loading confirmation
-
-#### **Method 3: Direct JSON Input**
-1. Paste manifest JSON directly into the **"Or paste JSON directly"** textarea
-2. Click **"🚀 Load Manifest"**
-3. The tool will create a temporary blob URL for testing
 
 ### 📊 **Status Monitoring**
 The status panel shows:
@@ -102,42 +94,6 @@ The status panel shows:
 - **Layout**: Automatic layout optimization
 - **Comparison**: Side-by-side viewing modes
 
-### 🌊 **OpenSeadragon Tab**
-
-#### **What It Shows**
-- **High-performance single images** with smooth zoom/pan
-- **Sequential navigation** for multi-canvas manifests
-- **Custom parsing** for different manifest types
-- **Performance-optimized** viewing experience
-
-#### **Intelligent Manifest Handling**
-The integrated OpenSeadragon includes custom logic:
-
-```javascript
-// Multi-canvas manifest → Sequential viewing
-if (manifest.items.length > 1) {
-    loadOSDSingleCanvas(manifest.items[0]);
-    // + navigation controls
-}
-
-// Single canvas with multiple annotations → Composition attempt
-else if (annotations.length > 1) {
-    loadOSDComposition(canvas, annotations);
-    // + composition handling
-}
-
-// Single image → Standard OpenSeadragon
-else {
-    loadOSDSingleImage(annotation);
-}
-```
-
-#### **Composition Limitations**
-- **Shows first image** of complex compositions
-- **Overlay indicators** for additional images
-- **Status messages** explaining limitations
-- **Recommendations** for alternative viewers
-
 ---
 
 ## Validation & Testing Features
@@ -166,11 +122,11 @@ The tool analyzes manifest structure for:
 - **Positioned compositions**: Viewer-specific capabilities
 
 #### **Compatibility Matrix**
-| Manifest Type | Mirador 3 | TheseusViewer | OpenSeadragon |
-|---------------|-----------|---------------|---------------|
-| Single Image | Excellent | Excellent | Excellent |
-| Multi-Canvas | Excellent | Good | Excellent |
-| Positioned Composition | Excellent | Good | Fair |
+| Manifest Type | Mirador 3 | TheseusViewer |
+|---------------|-----------|---------------|
+| Single Image | Excellent | Excellent |
+| Multi-Canvas | Excellent | Good |
+| Positioned Composition | Excellent | Good |
 
 ---
 
@@ -239,11 +195,6 @@ Validation provides insights on:
 - **Missing images**: Check image service URLs
 - **Layout errors**: Validate coordinate format
 
-##### **OpenSeadragon Issues**
-- **Single image only**: Expected for compositions
-- **No navigation**: Check manifest structure
-- **Performance issues**: Verify image service performance
-
 ### 🔧 **Advanced Troubleshooting**
 
 #### **Cross-Viewer Compatibility**
@@ -275,7 +226,7 @@ Validation provides insights on:
 4. **Document compatibility** issues for future reference
 
 #### **Comparative Analysis**
-- **Test all three viewers** for comprehensive coverage
+- **Test both viewers** for comprehensive coverage
 - **Note viewer-specific behaviors** and limitations
 - **Document performance differences**
 - **Identify optimal viewer** for each use case
@@ -308,9 +259,6 @@ Each viewer can be embedded using iframe:
 
 <!-- TheseusViewer -->
 <iframe src="https://theseusviewer.org/?manifest=MANIFEST_URL"></iframe>
-
-<!-- Custom OpenSeadragon -->
-<!-- Use provided OpenSeadragon integration code -->
 ```
 
 #### **API Integration**
@@ -329,8 +277,7 @@ Each viewer can be embedded using iframe:
 #### **Viewer Selection**
 - **Mirador 3**: For complex scholarly applications
 - **TheseusViewer**: For academic image comparison
-- **OpenSeadragon**: For high-performance single images
-- **Multi-viewer**: For maximum compatibility
+- **Multi-viewer**: For maximum compatibility across both
 
 ---
 
@@ -368,7 +315,6 @@ Each viewer can be embedded using iframe:
 Each viewer maintains its own keyboard shortcuts:
 - **Mirador 3**: Standard Mirador shortcuts
 - **TheseusViewer**: Viewer-specific controls
-- **OpenSeadragon**: Zoom/pan shortcuts
 
 ---
 
@@ -376,11 +322,8 @@ Each viewer maintains its own keyboard shortcuts:
 
 ### ❓ **Frequently Asked Questions**
 
-**Q: Why does my manifest work in Mirador 3 but not OpenSeadragon?**
-A: OpenSeadragon has limited support for positioned compositions. This is expected behavior for complex layouts.
-
 **Q: Can I test local manifests?**
-A: Yes, paste the JSON directly into the textarea. The tool creates a temporary blob URL for testing.
+A: The tool loads manifests by URL only (into an iframe pointing at the Mirador/TheseusViewer embed service), so a local manifest needs to be reachable at a public URL first — for example via GitHub Pages (see the [GitHub Pages guide](./github_pages_guide.md)).
 
 **Q: How do I report compatibility issues?**
 A: Use the validation feature first, then test with sample manifests to isolate the issue.

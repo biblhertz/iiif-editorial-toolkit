@@ -85,29 +85,16 @@ nextBtn.textContent = 'Successivo ▶';
 - Include citation information
 - Add export/sharing capabilities
 
-### 📁 **File Structure for Repository**
-```
-your-repo/
-├── src/
-│   ├── viewer/
-│   │   ├── openseadragon-viewer.html           # Main viewer file
-│   │   ├── openseadragon-viewer-template.html  # Template with placeholders
-│   │   └── customization-guide.md              # Detailed customization instructions
-│   └── examples/
-│       └── sample-manifests/
-├── docs/
-│   └── viewer-manual.md
-└── README.md
-```
+### 📁 **File Location**
+The viewer lives at `src/openseadragon/osd_viewer.html` in this repository. There is no separate template or customization-guide file — the placeholders below are marked inline in that same file with `<!-- CUSTOMIZE: -->` comments.
 
 ### 🚀 **Quick Setup Guide**
-1. **Clone the repository**
-2. **Open `openseadragon-viewer-template.html`**
-3. **Replace all placeholder URLs** with your manifest URLs
-4. **Update page title and descriptions**
-5. **Modify the viewerConfig** with your project details
-6. **Test with your manifests**
-7. **Deploy to your web server**
+1. **Open `src/openseadragon/osd_viewer.html`** in a text editor
+2. **Replace the placeholder manifest URLs** (`Sample Comparison 1/2`, `Sample Single Image`) with your own — the IIIF Cookbook example entries below them can stay for testing
+3. **Update page title and descriptions**
+4. **Modify the `viewerConfig` object** with your project details
+5. **Test with your manifests** by opening the file in a browser
+6. **Deploy** alongside the rest of the toolkit (see the [GitHub Pages guide](./github_pages_guide.md))
 
 ### ⚠️ **Important Notes**
 - **Keep IIIF community examples** for testing functionality
@@ -122,23 +109,23 @@ your-repo/
 ### 🚀 **Loading a Manifest**
 
 #### **Method 1: Select from Dropdown**
-1. Use the **"Seleziona Layout"** dropdown
-2. Choose from pre-configured manifests:
-   - **Composizione Completa** - Full comparison layout
-   - **Layout Semplificato** - Simplified arrangement  
-   - **Sequenza Singola** - Single sequence viewing
-3. Click **"Carica Manifest"**
+1. Use the **"Quick Test Manifests"** dropdown
+2. Choose from pre-configured manifests (the `Sample Comparison 1/2` and `Sample Single Image` placeholders, or the IIIF Cookbook examples)
+3. Click **"🚀 Load Manifest"**
 
 #### **Method 2: Custom Manifest URL**
-1. Enter your manifest URL in the text field
-2. Click **"Carica Manifest"**
-3. Wait for the "Manifest caricato con successo" status message
+1. Enter your manifest URL in the **"Your Manifest URL"** field
+2. Click **"🚀 Load Manifest"**
+
+#### **Method 3: Direct JSON Input**
+1. Paste manifest JSON into the **"Or paste JSON directly"** textarea
+2. Click **"🚀 Load Manifest"**
 
 ### 📊 **Viewer Status**
-Monitor the status panel for:
-- **Stato**: Current loading/error status
-- **Immagini**: Number of images in manifest
-- **Dimensioni**: Canvas dimensions
+Monitor the info panel for:
+- **Status**: Current loading/error status
+- **Images**: Number of images in manifest
+- **Dimensions**: Canvas dimensions
 
 ---
 
@@ -157,19 +144,14 @@ Monitor the status panel for:
 - **Arrow Keys**: Navigate (if enabled)
 
 #### **Reset**
-- **Home Button (⌂)**: Return to full view
-- **Right Click**: Quick reset (context menu)
-- **"Reset Vista" Button**: Reset to original view
+- **🏠 Fit to Screen**: Optimize for full canvas view
+- **🔄 Reset View**: Return to home position
+- **📐 Fit Comparison**: Optimize for comparison viewing
 
 ### 🔄 **Advanced Controls**
 
 #### **Rotation**
-- **Rotation Control**: Rotate image clockwise/counterclockwise
-- **Keyboard Shortcuts**: R key (if enabled)
-
-#### **Full Screen**
-- **Full Screen Button**: Toggle full screen mode
-- **ESC Key**: Exit full screen
+- OpenSeadragon's built-in rotation control is enabled (`showRotationControl: true`) — no custom rotation UI or keyboard shortcut is wired up beyond this.
 
 ---
 
@@ -184,13 +166,13 @@ Monitor the status panel for:
 **What it shows**: Sequential images with navigation
 **Navigation**: Automatic navigation controls appear
 **Features**:
-- **Previous/Next buttons** (◀ Precedente / Successivo ▶)
+- **Previous/Next buttons** (◀ Previous / Next ▶)
 - **Image counter** (1/3, 2/3, etc.)
 - **Image titles** displayed in navigation bar
 
 **Controls**:
-- **Precedente**: Go to previous image
-- **Successivo**: Go to next image
+- **◀ Previous**: Go to previous image
+- **Next ▶**: Go to next image
 - **Counter**: Shows current position in sequence
 
 ### 🎨 **Positioned Compositions**
@@ -233,7 +215,7 @@ Monitor the status panel for:
 
 ### ❌ **Common Issues**
 
-#### **"Errore nel caricamento" Message**
+#### **"Failed to load manifest" Message**
 **Causes**:
 - Invalid manifest URL
 - CORS issues with image server
@@ -252,8 +234,8 @@ Monitor the status panel for:
 - Manifest format incompatibility
 
 **Solutions**:
-1. Try the "Adatta Confronto" button
-2. Use "Reset Vista" to recalculate view
+1. Try the "📐 Fit Comparison" button
+2. Use "🔄 Reset View" to recalculate view
 3. Check if manifest works in other viewers
 4. Verify coordinate format in manifest
 
@@ -295,7 +277,7 @@ Monitor the status panel for:
 **Symptoms**: Images positioned incorrectly
 **Solutions**:
 1. This is a known OpenSeadragon limitation
-2. Use "Adatta Confronto" for better fit
+2. Use "📐 Fit Comparison" for better fit
 3. Consider using Mirador 3 for complex compositions
 4. Check manifest coordinates in other viewers
 
@@ -362,24 +344,6 @@ Monitor the status panel for:
 
 ---
 
-## Keyboard Shortcuts
-
-### ⌨️ **Navigation**
-- **Arrow Keys**: Pan image (if enabled)
-- **+ / -**: Zoom in/out
-- **Home**: Return to full view
-- **Space**: Toggle full screen
-- **ESC**: Exit full screen
-
-### 🔄 **Advanced**
-- **R**: Rotate (if rotation enabled)
-- **F**: Full screen toggle
-- **Ctrl+0**: Reset zoom to 100%
-
-*Note: Some shortcuts may depend on browser and configuration*
-
----
-
 ## Integration Notes
 
 ### 🔗 **For Developers**
@@ -401,7 +365,7 @@ Monitor the status panel for:
 ### ❓ **Frequently Asked Questions**
 
 **Q: Why do some compositions show only one image?**
-A: This is due to OpenSeadragon's interpretation of positioned annotations. Use "Adatta Confronto" or try Mirador 3 for better composition support.
+A: This is due to OpenSeadragon's interpretation of positioned annotations. Use "📐 Fit Comparison" or try Mirador 3 for better composition support.
 
 **Q: Can I save or bookmark specific views?**
 A: The viewer doesn't support bookmarking specific zoom/pan positions. Use screenshots for reference.

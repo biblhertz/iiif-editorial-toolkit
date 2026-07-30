@@ -113,36 +113,9 @@ The International Image Interoperability Framework (IIIF) provides standardized 
 - ✅ Complete annotation structure
 - ✅ Proper target formatting
 
-#### Built-in Validation Checks:
-```javascript
-function validateManifest(manifest) {
-  const results = [];
-  
-  // Context validation
-  if (manifest['@context'] && 
-      manifest['@context'].includes('http://iiif.io/api/presentation/3/context.json')) {
-    results.push({valid: true, message: 'Valid IIIF 3.0 context'});
-  } else {
-    results.push({valid: false, message: 'Missing or invalid @context'});
-  }
-  
-  // ID validation
-  if (manifest.id && isValidURI(manifest.id)) {
-    results.push({valid: true, message: 'Valid id'});
-  } else {
-    results.push({valid: false, message: 'Missing or invalid id'});
-  }
-  
-  // Type validation
-  if (manifest.type === 'Manifest') {
-    results.push({valid: true, message: 'Valid type'});
-  } else {
-    results.push({valid: false, message: 'Invalid type'});
-  }
-  
-  return results;
-}
-```
+#### Built-in Validation Checks
+
+The Validation & Testing tab's **Validate manifest** button reads a pasted manifest URL or JSON and passes the parsed object to `validateIIIFManifest(manifest)`, which returns an array of `{valid, message}` results. It detects the Presentation API version from `@context` (v2 or v3), then checks `id`/`@id`, `type`, and `label`, and finally walks the canvas structure — `sequences[0].canvases` for v2 or `items[]` for v3 — reporting canvas and painting-annotation counts. Results are rendered in the panel by `displayValidationResults()`.
 
 ### Target Format Compatibility
 
@@ -208,41 +181,10 @@ function validateManifest(manifest) {
 ### Toolkit Image Service Support
 
 #### Auto-Detection
-```javascript
-async function fetchImageInfo(serviceId) {
-  try {
-    const response = await fetch(`${serviceId}/info.json`);
-    const info = await response.json();
-    
-    return {
-      width: info.width,
-      height: info.height,
-      profile: info.profile,
-      protocol: info.protocol
-    };
-  } catch (error) {
-    console.error('Image service detection failed:', error);
-    return null;
-  }
-}
-```
 
-#### Profile Verification
-```javascript
-function validateImageService(service) {
-  const requiredFields = ['id', 'type', 'profile'];
-  const validTypes = ['ImageService3', 'ImageService2'];
-  const validProfiles = ['level0', 'level1', 'level2'];
-  
-  return {
-    hasRequiredFields: requiredFields.every(field => service[field]),
-    hasValidType: validTypes.includes(service.type),
-    hasValidProfile: validProfiles.some(profile => 
-      service.profile.includes(profile)
-    )
-  };
-}
-```
+In the Individual Images tab, `fetchImageInfo()` reads the **IIIF Service ID** field, requests `{serviceId}/info.json`, and populates width/height and a thumbnail preview on success. It reports an error via the on-screen message area (not a thrown exception) if the request fails — most often due to CORS restrictions on the image server — in which case dimensions can be entered manually.
+
+There is no separate image-service profile validator; the tool only reads `width`/`height` from `info.json` and does not check `profile` or protocol level.
 
 ## 🔍 Common Compliance Issues
 
@@ -434,4 +376,4 @@ viewers.forEach(viewer => {
 
 ---
 
-**Next:** [API Reference](./api-reference.md) | [Examples](./examples.md)
+**See also:** [Examples](./examples.md) | [Generator Guide](./generator_guide.md)
