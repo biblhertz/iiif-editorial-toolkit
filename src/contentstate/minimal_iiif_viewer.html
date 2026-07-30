@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIIF Viewer</title>
+    <meta name="description" content="IIIF Content State Viewer for academic publications">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            color: #2c3e50;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 12px 20px;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 1.4em;
+            color: #495057;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .viewer-container {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+        
+        .viewer-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #dc3545;
+            padding: 20px;
+        }
+        
+        .error h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        .error p {
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 8px 20px;
+            font-size: 0.85em;
+            color: #6c757d;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Minimal mode - hide header and footer */
+        .minimal .header,
+        .minimal .footer {
+            display: none;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.2em;
+            }
+            
+            .footer {
+                font-size: 0.8em;
+                padding: 6px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>IIIF Content State Viewer</h1>
+    </div>
+    
+    <div class="viewer-container">
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading IIIF content...</p>
+        </div>
+        
+        <div class="error" id="error" style="display: none;">
+            <h2>Unable to load content</h2>
+            <p id="error-message">Please check the URL parameters and try again.</p>
+        </div>
+        
+        <iframe id="viewer-iframe" class="viewer-iframe" style="display: none;"></iframe>
+    </div>
+    
+    <div class="footer">
+        Powered by <a href="https://theseusviewer.org" target="_blank">TheseusViewer</a> • 
+        <a href="https://iiif.io" target="_blank">IIIF</a> Content State Viewer
+    </div>
+
+    <script>
+        // Configuration
+        const VIEWER_BASE_URL = 'https://theseusviewer.org/';
+        
+        // DOM elements
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const iframe = document.getElementById('viewer-iframe');
+        
+        // Initialize viewer
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeViewer();
+        });
+        
+        function initializeViewer() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Check for minimal mode
+            if (urlParams.get('minimal') === 'true' || urlParams.get('m') === '1') {
+                document.body.classList.add('minimal');
+            }
+            
+            // Get content state parameter
+            const contentParam = urlParams.get('content') || 
+                               urlParams.get('contentState') || 
+                               urlParams.get('iiif-content') ||
+                               urlParams.get('c');
+            
+            // Get manifest parameter (fallback)
+            const manifestParam = urlParams.get('manifest') || 
+                                 urlParams.get('m');
+            
+            if (contentParam) {
+                loadContentState(contentParam);
+            } else if (manifestParam) {
+                loadManifest(manifestParam);
+            } else {
+                showError('No content state or manifest URL provided', 
+                         'Add ?content=[base64-content-state] or ?manifest=[manifest-url] to the URL');
+            }
+        }
+        
+        function loadContentState(contentParam) {
+            try {
+                // Try to decode content state
+                let contentState;
+                let decodedJson;
+                
+                // Try base64 decoding first
+                try {
+                    decodedJson = atob(contentParam);
+                    contentState = JSON.parse(decodedJson);
+                    console.log('Decoded content state from base64');
+                } catch (base64Error) {
+                    // Fallback to URL decoding
+                    try {
+                        decodedJson = decodeURIComponent(contentParam);
+                        contentState = JSON.parse(decodedJson);
+                        console.log('Decoded content state from URL encoding');
+                    } catch (urlError) {
+                        throw new Error('Invalid content state encoding');
+                    }
+                }
+                
+                // Build viewer URL
+                const viewerUrl = `${VIEWER_BASE_URL}?iiif-content=${encodeURIComponent(contentParam)}`;
+                
+                // Update page title if possible
+                updatePageTitle(contentState);
+                
+                // Load in iframe
+                loadViewer(viewerUrl);
+                
+            } catch (error) {
+                console.error('Content state error:', error);
+                showError('Invalid content state', error.message);
+            }
+        }
+        
+        function loadManifest(manifestUrl) {
+            try {
+                // Build viewer URL for manifest
+                const viewerUrl = `${VIEWER_BASE_URL}?manifest=${encodeURIComponent(manifestUrl)}`;
+                
+                // Load in iframe
+                loadViewer(viewerUrl);
+                
+            } catch (error) {
+                console.error('Manifest error:', error);
+                showError('Invalid manifest URL', error.message);
+            }
+        }
+        
+        function loadViewer(viewerUrl) {
+            console.log('Loading viewer:', viewerUrl);
+            
+            iframe.src = viewerUrl;
+            
+            // Show iframe and hide loading
+            iframe.onload = function() {
+                loading.style.display = 'none';
+                iframe.style.display = 'block';
+                console.log('Viewer loaded successfully');
+            };
+            
+            iframe.onerror = function() {
+                showError('Failed to load viewer', 'The IIIF viewer could not be loaded. Please try again.');
+            };
+            
+            // Timeout fallback
+            setTimeout(() => {
+                if (iframe.style.display === 'none') {
+                    loading.style.display = 'none';
+                    iframe.style.display = 'block';
+                }
+            }, 5000);
+        }
+        
+        function updatePageTitle(contentState) {
+            try {
+                // Try to extract title from content state
+                let title = 'IIIF Content State';
+                
+                if (contentState.annotations && contentState.annotations[0] && contentState.annotations[0].label) {
+                    const label = contentState.annotations[0].label;
+                    if (label.en && label.en[0]) {
+                        title = label.en[0];
+                    } else if (label.it && label.it[0]) {
+                        title = label.it[0];
+                    }
+                }
+                
+                document.title = `${title} - IIIF Viewer`;
+                document.querySelector('.header h1').textContent = title;
+                
+            } catch (error) {
+                console.log('Could not extract title from content state');
+            }
+        }
+        
+        function showError(title, message) {
+            loading.style.display = 'none';
+            iframe.style.display = 'none';
+            error.style.display = 'block';
+            
+            error.querySelector('h2').textContent = title;
+            errorMessage.textContent = message;
+        }
+        
+        // Handle URL changes (for single-page navigation)
+        window.addEventListener('popstate', function() {
+            location.reload();
+        });
+        
+        // Handle message from iframe (optional)
+        window.addEventListener('message', function(event) {
+            // Handle any messages from TheseusViewer if needed
+            console.log('Message from viewer:', event.data);
+        });
+    </script>
+</body>
+</html>

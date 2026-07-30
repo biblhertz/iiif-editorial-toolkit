@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JATS &lt;alternatives&gt; Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; padding: 32px 16px; background: #eeeae2; }
+</style>
+</head>
+<body>
+<div style="--fg:#1f2430; --bg:#faf9f6; --accent:#8a3b2f; --accent-soft:#f1e4de; --line:#ddd6cc; --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-family:Georgia,'Iowan Old Style',serif; color:var(--fg); max-width:900px; margin:0 auto;">
+
+<style>
+  .jag-wrap * { box-sizing: border-box; }
+  .jag-wrap { background: var(--bg); padding: 24px; border-radius: 10px; }
+  .jag-title { font-size: 20px; font-weight: 700; margin: 0 0 4px; letter-spacing: 0.2px; }
+  .jag-sub { font-size: 13px; color: #6b6458; margin: 0 0 20px; }
+  .jag-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .jag-field { flex: 1; min-width: 160px; }
+  .jag-field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #8a8375; margin-bottom: 4px; font-family: sans-serif; }
+  .jag-field input, .jag-field select, .jag-field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 14px; background: #fff; color: var(--fg); font-family: sans-serif;
+  }
+  .jag-field input:focus, .jag-field textarea:focus { outline: none; border-color: var(--accent); }
+  .jag-modes { display: flex; gap: 6px; margin-bottom: 16px; font-family: sans-serif; }
+  .jag-mode-btn {
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+    font-size: 13px; cursor: pointer; color: #6b6458;
+  }
+  .jag-mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .jag-mode-panel { display: none; }
+  .jag-mode-panel.active { display: block; }
+  .jag-textarea { min-height: 110px; font-family: var(--mono); font-size: 13px; resize: vertical; }
+  .jag-hint { font-size: 12px; color: #8a8375; margin-top: 4px; font-family: sans-serif; line-height: 1.4; }
+  .jag-hint code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+  .jag-actions { display: flex; gap: 10px; align-items: center; margin: 18px 0 14px; }
+  .jag-btn {
+    font-family: sans-serif; font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 6px;
+    border: none; cursor: pointer; transition: background 0.15s;
+  }
+  .jag-btn-primary { background: var(--accent); color: #fff; }
+  .jag-btn-primary:hover { background: #6f2f26; }
+  .jag-btn-secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  .jag-btn-secondary.copied { background: #3a7d4f; color: #fff; border-color: #3a7d4f; }
+  .jag-badge {
+    font-family: sans-serif; font-size: 12px; background: var(--accent-soft); color: var(--accent);
+    padding: 4px 10px; border-radius: 999px; display: none;
+  }
+  .jag-output {
+    background: #1f2430; color: #e8e6df; border-radius: 8px; padding: 16px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre-wrap;
+    word-break: break-all; max-height: 480px; overflow-y: auto;
+  }
+  .jag-tag { color: #7fb0e8; }
+  .jag-attr { color: #d8b56b; }
+  .jag-val { color: #a8d19a; }
+  .jag-comment { color: #7a8471; }
+  .jag-footer { font-size: 11px; color: #a39c8c; margin-top: 14px; font-family: sans-serif; }
+</style>
+
+<div class="jag-wrap">
+  <div class="jag-title">JATS &lt;alternatives&gt; Generator</div>
+  <p class="jag-sub">Builds paired <code>&lt;graphic specific-use="online"&gt;</code> (IIIF) / <code>&lt;graphic specific-use="archival"&gt;</code> (local) blocks for HSAH figures.</p>
+
+  <div class="jag-row">
+    <div class="jag-field">
+      <label>Article ID (e.g. 0403)</label>
+      <input id="jag-article" type="text" value="0401" oninput="jagGenerate()">
+    </div>
+    <div class="jag-field">
+      <label>Journal folder (dpub path)</label>
+      <input id="jag-journal" type="text" value="hsah0401" oninput="jagGenerate()">
+    </div>
+  </div>
+
+  <div class="jag-row">
+    <div class="jag-field" style="flex: 2;">
+      <label>IIIF base URL pattern</label>
+      <input id="jag-iiif-base" type="text" value="https://fotothek.biblhertz.it/iiif/3" oninput="jagGenerate()">
+      <div class="jag-hint">Full path built as: <code>{base}/dpub%2F{journal}%2F{filename}.jp2/full/max/0/default.jpg</code></div>
+    </div>
+    <div class="jag-field">
+      <label>Default alt-text</label>
+      <input id="jag-alttext" type="text" value="Immagine descritta in didascalia" oninput="jagGenerate()">
+    </div>
+  </div>
+
+  <div class="jag-modes">
+    <button class="jag-mode-btn active" data-mode="range" onclick="jagSetMode('range')">Range</button>
+    <button class="jag-mode-btn" data-mode="custom" onclick="jagSetMode('custom')">Custom list</button>
+  </div>
+
+  <div class="jag-mode-panel active" data-panel="range">
+    <div class="jag-row">
+      <div class="jag-field">
+        <label>First figure #</label>
+        <input id="jag-from" type="number" value="1" min="1" oninput="jagGenerate()">
+      </div>
+      <div class="jag-field">
+        <label>Last figure #</label>
+        <input id="jag-to" type="number" value="10" min="1" oninput="jagGenerate()">
+      </div>
+      <div class="jag-field">
+        <label>Filename zero-padding</label>
+        <select id="jag-pad" onchange="jagGenerate()">
+          <option value="2" selected>2 digits (01, 02…)</option>
+          <option value="3">3 digits (001, 002…)</option>
+          <option value="0">none (1, 2…)</option>
+        </select>
+      </div>
+    </div>
+    <div class="jag-hint">Figure label and filename number stay in sync (Figura N → {article}_N). Use "Custom list" below when export numbering diverges from the author's labels (e.g. 3a/3b).</div>
+  </div>
+
+  <div class="jag-mode-panel" data-panel="custom">
+    <div class="jag-field">
+      <label>Custom list — one per line</label>
+      <textarea id="jag-custom" class="jag-textarea" oninput="jagGenerate()" placeholder="01&#10;02&#10;03a&#10;03b&#10;04
+
+or with explicit figure numbers:
+1, 01
+2, 02
+3, 03a
+4, 03b"></textarea>
+    </div>
+    <div class="jag-hint">
+      Either a bare filename suffix per line (figure numbers auto-increment 1, 2, 3…), or <code>fig_num, filename_suffix</code> pairs — use this for author-numbered cases like 3a/3b where export numbering diverges from the article's figure list.
+    </div>
+  </div>
+
+  <div class="jag-actions">
+    <button class="jag-btn jag-btn-primary" onclick="jagGenerate()">Generate</button>
+    <button class="jag-btn jag-btn-secondary" id="jag-copy-btn" onclick="jagCopy()">Copy XML</button>
+    <span class="jag-badge" id="jag-badge"></span>
+  </div>
+
+  <div class="jag-output" id="jag-output"></div>
+
+  <div class="jag-footer">Output uses the current fields live — no filenames or content are sent anywhere; everything runs in this page.</div>
+</div>
+
+<script>
+  function jagEscHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function jagSetMode(mode) {
+    document.querySelectorAll('.jag-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    document.querySelectorAll('.jag-mode-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === mode));
+    jagGenerate();
+  }
+
+  function jagCurrentMode() {
+    return document.querySelector('.jag-mode-btn.active').dataset.mode;
+  }
+
+  function jagBuildEntries() {
+    const mode = jagCurrentMode();
+    const entries = [];
+
+    if (mode === 'range') {
+      const from = parseInt(document.getElementById('jag-from').value, 10) || 1;
+      const to = parseInt(document.getElementById('jag-to').value, 10) || from;
+      const pad = parseInt(document.getElementById('jag-pad').value, 10);
+      for (let n = from; n <= to; n++) {
+        const suffix = pad > 0 ? String(n).padStart(pad, '0') : String(n);
+        entries.push({ figNum: n, suffix });
+      }
+    } else {
+      const raw = document.getElementById('jag-custom').value;
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      let auto = 1;
+      for (const line of lines) {
+        if (line.includes(',')) {
+          const [numPart, suffixPart] = line.split(',').map(s => s.trim());
+          const num = parseInt(numPart, 10);
+          entries.push({ figNum: isNaN(num) ? auto : num, suffix: suffixPart });
+        } else {
+          entries.push({ figNum: auto, suffix: line });
+        }
+        auto++;
+      }
+    }
+    return entries;
+  }
+
+  function jagGenerate() {
+    const article = document.getElementById('jag-article').value.trim() || '0000';
+    const journal = document.getElementById('jag-journal').value.trim() || article;
+    const iiifBase = document.getElementById('jag-iiif-base').value.trim();
+    const altText = document.getElementById('jag-alttext').value.trim() || 'Immagine descritta in didascalia';
+
+    const entries = jagBuildEntries();
+    const blocksHtml = [];
+    const blocksRaw = [];
+
+    for (const { figNum, suffix } of entries) {
+      const filenameBase = `${article}_${suffix}`;
+      const iiifUrl = `${iiifBase}/dpub%2F${journal}%2F${filenameBase}.jp2/full/max/0/default.jpg`;
+      const archivalFile = `${filenameBase}.jpg`;
+      const altEsc = jagEscHtml(altText);
+
+      const raw =
+        `<!-- Figura ${figNum} — ${filenameBase} -->\n` +
+        `<alternatives>\n` +
+        `  <graphic specific-use="online" xlink:href="${iiifUrl}"><alt-text>${altText}</alt-text></graphic>\n` +
+        `  <graphic specific-use="archival" xlink:href="${archivalFile}"><alt-text>${altText}</alt-text></graphic>\n` +
+        `</alternatives>`;
+      blocksRaw.push(raw);
+
+      const html =
+        `<span class="jag-comment">&lt;!-- Figura ${figNum} — ${filenameBase} --&gt;</span>\n` +
+        `<span class="jag-tag">&lt;alternatives&gt;</span>\n` +
+        `  <span class="jag-tag">&lt;graphic</span> <span class="jag-attr">specific-use=</span><span class="jag-val">"online"</span> <span class="jag-attr">xlink:href=</span><span class="jag-val">"${jagEscHtml(iiifUrl)}"</span><span class="jag-tag">&gt;</span><span class="jag-tag">&lt;alt-text&gt;</span>${altEsc}<span class="jag-tag">&lt;/alt-text&gt;&lt;/graphic&gt;</span>\n` +
+        `  <span class="jag-tag">&lt;graphic</span> <span class="jag-attr">specific-use=</span><span class="jag-val">"archival"</span> <span class="jag-attr">xlink:href=</span><span class="jag-val">"${archivalFile}"</span><span class="jag-tag">&gt;</span><span class="jag-tag">&lt;alt-text&gt;</span>${altEsc}<span class="jag-tag">&lt;/alt-text&gt;&lt;/graphic&gt;</span>\n` +
+        `<span class="jag-tag">&lt;/alternatives&gt;</span>`;
+      blocksHtml.push(html);
+    }
+
+    const output = document.getElementById('jag-output');
+    output.innerHTML = blocksHtml.join('\n\n');
+    output.dataset.raw = blocksRaw.join('\n\n');
+
+    const badge = document.getElementById('jag-badge');
+    if (entries.length > 0) {
+      badge.textContent = `${entries.length} figure${entries.length === 1 ? '' : 's'}`;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function jagCopy() {
+    const raw = document.getElementById('jag-output').dataset.raw;
+    if (!raw) return;
+    navigator.clipboard.writeText(raw).then(() => {
+      const btn = document.getElementById('jag-copy-btn');
+      const old = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 1500);
+    });
+  }
+
+  jagGenerate();
+</script>
+</div>
+
+</body>
+</html>

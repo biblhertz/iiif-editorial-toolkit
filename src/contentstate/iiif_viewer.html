@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIIF Multi-Image Manifest Viewer with Content State</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px; background: #f8f9fa; color: #2c3e50;
+        }
+        
+        .header {
+            text-align: center; margin-bottom: 30px; padding: 30px;
+            background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 { color: #2c3e50; margin: 0 0 10px 0; font-size: 2.5em; }
+        
+        .content-state-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
+            text-align: center; font-weight: 600; display: none;
+        }
+        
+        .viewer-tabs {
+            display: flex; margin-bottom: 20px; background: white;
+            border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .viewer-tab {
+            flex: 1; padding: 15px 20px; background: #ecf0f1; border: none;
+            cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s;
+        }
+        
+        .viewer-tab.active { background: #3498db; color: white; }
+        .viewer-tab:hover { background: #2980b9; color: white; }
+        
+        .main-container {
+            display: flex; gap: 20px; height: 700px;
+        }
+        
+        .viewer-container {
+            flex: 1; background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        
+        .controls {
+            width: 320px; background: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px;
+        }
+        
+        .controls h3 {
+            margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 2px solid #e0e6ed;
+            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #3498db;
+        }
+        
+        .button {
+            background: #3498db; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+            transition: all 0.3s; width: 100%; margin-bottom: 10px;
+        }
+        
+        .button:hover { background: #2980b9; }
+        .button.secondary { background: #95a5a6; }
+        .button.success { background: #27ae60; }
+        .button.warning { background: #f39c12; }
+        
+        .status {
+            padding: 15px; border-radius: 8px; margin: 15px 0;
+            font-weight: 600; text-align: center;
+        }
+        
+        .status.success { background: #d5edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #b8daff; }
+        
+        .info-panel {
+            background: #f8f9fa; padding: 15px; border-radius: 8px;
+            margin: 15px 0; border-left: 4px solid #3498db;
+        }
+        
+        .info-panel h4 { margin-top: 0; color: #2c3e50; }
+        .info-panel p { margin: 5px 0; font-size: 14px; color: #5d6d7e; }
+        
+        .viewer-content {
+            width: 100%; height: 100%; border: none; border-radius: 12px;
+        }
+        
+        .manifest-validation {
+            background: #f8f9fa; padding: 15px; border-radius: 8px;
+            margin: 15px 0; font-family: monospace; font-size: 12px;
+        }
+        
+        .validation-item {
+            margin: 5px 0; padding: 5px; border-radius: 4px;
+        }
+        
+        .validation-item.valid { background: #d5edda; color: #155724; }
+        .validation-item.invalid { background: #f8d7da; color: #721c24; }
+        
+        .content-state-info {
+            background: #e8f4fd; padding: 15px; border-radius: 8px;
+            margin: 15px 0; border: 2px solid #3498db;
+        }
+        
+        .content-state-info h4 { margin-top: 0; color: #2980b9; }
+        
+        .url-display {
+            background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 6px;
+            font-family: monospace; font-size: 11px; overflow-x: auto;
+            margin: 10px 0; word-break: break-all;
+        }
+
+        .content-state-details {
+            background: #f8f9fa; padding: 12px; border-radius: 6px;
+            font-family: monospace; font-size: 12px; margin: 10px 0;
+        }
+
+        .content-state-size {
+            color: #7f8c8d; font-size: 11px; margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖼️ IIIF Multi-Image Manifest Viewer</h1>
+        <p>Test your manifests with TheseusViewer (Content State) and Mirador 3 (Manifest only)</p>
+    </div>
+    
+    <div class="content-state-banner" id="contentStateBanner">
+        🎯 Content State Active - Automatically switched to TheseusViewer for region highlighting
+    </div>
+    
+    <div class="viewer-tabs">
+        <button class="viewer-tab active" onclick="switchViewer('mirador')">🎭 Mirador 3</button>
+        <button class="viewer-tab" onclick="switchViewer('theseus')">📚 TheseusViewer</button>
+    </div>
+    
+    <div class="main-container">
+        <div class="viewer-container">
+            <iframe id="iframe-viewer" class="viewer-content" src="about:blank"></iframe>
+        </div>
+        
+        <div class="controls">
+            <h3>📋 Manifest Testing</h3>
+            
+            <div id="contentStateSection" class="content-state-info" style="display: none;">
+                <h4>🎯 Active Content State</h4>
+                <p><strong>Canvas:</strong> <span id="contentStateCanvas">-</span></p>
+                <p><strong>Region:</strong> <span id="contentStateRegion">-</span></p>
+                <div id="contentStateDetails" class="content-state-details"></div>
+                <div class="content-state-size">
+                    Size: <span id="contentStateSize">0</span> bytes
+                </div>
+                <button class="button warning" onclick="clearContentState()">🔄 Clear Content State</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestSelect">Quick Test Manifests:</label>
+                <select id="manifestSelect">
+                    <option value="">-- Select a test manifest --</option>
+                    <option value="https://annotation.biblhertz.it/iiif_manifests/HSAH/04/hsah_0410_vicentini.json">Hertziana - Pirro Ligorio</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0036-composition-from-multiple-images/manifest.json">IIIF Cookbook - Multiple Images</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0261-non-rectangular-commenting/manifest.json">IIIF Cookbook - Annotations</option>
+                    <option value="https://iiif.io/api/cookbook/recipe/0001-mvm-image/manifest.json">IIIF Cookbook - Basic Image</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="manifestUrl">Your Manifest URL:</label>
+                <input type="url" id="manifestUrl" placeholder="https://your-manifest.json">
+            </div>
+            
+            <div class="form-group">
+                <label for="contentStateInput">Content State (JSON/Base64/URL-encoded):</label>
+                <textarea id="contentStateInput" placeholder="Paste content state JSON, base64, or URL-encoded parameter here..." rows="4"></textarea>
+            </div>
+            
+            <button class="button" onclick="loadManifest()">🚀 Load Manifest</button>
+            <button class="button secondary" onclick="loadContentState()">🎯 Load Content State</button>
+            <button class="button success" onclick="validateManifest()">✅ Validate</button>
+            
+            <div id="validation-results" class="manifest-validation" style="display: none;"></div>
+            
+            <div id="status"></div>
+            
+            <div class="info-panel">
+                <h4>🎯 Current Viewer: <span id="current-viewer">Mirador 3</span></h4>
+                <p id="viewer-info">Advanced IIIF viewer with annotation support</p>
+            </div>
+            
+            <div class="info-panel">
+                <h4>🔗 Content State Support (Recipe 0485)</h4>
+                <p>This viewer supports IIIF Content State for deep linking to specific regions and annotations.</p>
+                <p><strong>Viewer Compatibility:</strong></p>
+                <ul style="font-size: 12px; margin: 5px 0;">
+                    <li>✅ <strong>TheseusViewer</strong> - Full content state support with region highlighting</li>
+                    <li>❌ <strong>Mirador 3</strong> - Content state not supported, opens manifest only</li>
+                    <li>🔧 <strong>Local Viewer</strong> - Test implementation</li>
+                </ul>
+                <p><small>For region highlighting, use TheseusViewer or other compatible viewers.</small></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentViewer = 'mirador'; // Default for regular manifest loading
+        let currentManifest = null;
+        let currentContentState = null;
+        
+        const viewerInfo = {
+            mirador: {
+                name: 'Mirador 3',
+                description: 'Advanced IIIF viewer - Content State not supported, opens manifest only'
+            },
+            theseus: {
+                name: 'TheseusViewer', 
+                description: 'Specialized viewer with full IIIF Content State support (Recipe 0485)'
+            }
+        };
+        
+        // Initialize and check for URL parameters
+        document.addEventListener('DOMContentLoaded', function() {
+            checkForContentStateInURL();
+            showStatus('Ready to test IIIF manifests and content states', 'info');
+            
+            // Auto-load manifest when selected from dropdown
+            const manifestSelect = document.getElementById('manifestSelect');
+            manifestSelect.addEventListener('change', function() {
+                if (this.value) {
+                    document.getElementById('manifestUrl').value = this.value;
+                    currentManifest = this.value;
+                    clearContentState(); // Clear content state when switching manifests
+                    loadManifestInViewer(this.value, currentViewer);
+                }
+            });
+        });
+        
+        // Check for content state in URL parameters
+        function checkForContentStateInURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const contentParam = urlParams.get('content') || urlParams.get('contentState') || urlParams.get('iiif-content');
+            
+            if (contentParam) {
+                try {
+                    let contentState;
+                    let decodedJson;
+                    
+                    // Try base64 decoding first (IIIF spec recommendation)
+                    try {
+                        decodedJson = atob(contentParam);
+                        contentState = JSON.parse(decodedJson);
+                        console.log('Decoded content state from base64');
+                    } catch (base64Error) {
+                        // Fallback to URL decoding for backward compatibility
+                        try {
+                            decodedJson = decodeURIComponent(contentParam);
+                            contentState = JSON.parse(decodedJson);
+                            console.log('Decoded content state from URL encoding');
+                        } catch (urlError) {
+                            throw new Error('Failed to decode as both base64 and URL encoding');
+                        }
+                    }
+                    
+                    handleContentState(contentState, contentParam); // Pass both parsed and encoded versions
+                    showStatus('Content state loaded from URL parameter', 'success');
+                } catch (error) {
+                    console.error('Failed to parse content state from URL:', error);
+                    showStatus('Invalid content state in URL: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        // Handle content state
+        function handleContentState(contentState, encodedContentState = null) {
+            currentContentState = contentState;
+            
+            // Store the encoded version for iframe usage
+            if (!encodedContentState) {
+                encodedContentState = btoa(JSON.stringify(contentState));
+            }
+            window.currentEncodedContentState = encodedContentState;
+            
+            // Extract manifest URL from partOf
+            let manifestUrl = null;
+            if (contentState.partOf && contentState.partOf[0] && contentState.partOf[0].id) {
+                manifestUrl = contentState.partOf[0].id;
+            }
+            
+            if (manifestUrl) {
+                document.getElementById('manifestUrl').value = manifestUrl;
+                currentManifest = manifestUrl;
+                
+                // Show content state info
+                displayContentStateInfo(contentState);
+                
+                // Switch to TheseusViewer automatically since it supports content states
+                if (currentViewer !== 'theseus') {
+                    currentViewer = 'theseus';
+                    
+                    // Update the active tab
+                    document.querySelectorAll('.viewer-tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelector('[onclick="switchViewer(\'theseus\')"]').classList.add('active');
+                    
+                    // Update viewer info
+                    document.getElementById('current-viewer').textContent = viewerInfo.theseus.name;
+                    document.getElementById('viewer-info').textContent = viewerInfo.theseus.description;
+                    
+                    showStatus('Switched to TheseusViewer for content state support', 'info');
+                }
+                
+                // Load in current viewer
+                loadContentStateInViewer(contentState, currentViewer);
+                
+                // Show content state banner
+                document.getElementById('contentStateBanner').style.display = 'block';
+            } else {
+                showStatus('Content state loaded but no manifest URL found in partOf field', 'error');
+                console.error('Content state missing partOf:', contentState);
+            }
+        }
+        
+        // Display content state information
+        function displayContentStateInfo(contentState) {
+            const section = document.getElementById('contentStateSection');
+            
+            // Extract canvas and region info
+            let canvasInfo = 'Unknown Canvas';
+            let regionInfo = 'No region specified';
+            
+            if (contentState.id) {
+                // Parse canvas ID and region from the content state ID
+                const idParts = contentState.id.split('#xywh=');
+                if (idParts.length === 2) {
+                    canvasInfo = idParts[0].split('/').pop(); // Get last part of canvas ID
+                    regionInfo = idParts[1];
+                }
+            }
+            
+            document.getElementById('contentStateCanvas').textContent = canvasInfo;
+            document.getElementById('contentStateRegion').textContent = regionInfo;
+            
+            // Show full content state details
+            const detailsDiv = document.getElementById('contentStateDetails');
+            detailsDiv.textContent = JSON.stringify(contentState, null, 2);
+            
+            // Show size
+            const size = new Blob([JSON.stringify(contentState)]).size;
+            document.getElementById('contentStateSize').textContent = size;
+            
+            section.style.display = 'block';
+            
+            console.log('Content State Info:', {
+                canvas: canvasInfo,
+                region: regionInfo,
+                fullContentState: contentState,
+                encodedVersion: window.currentEncodedContentState
+            });
+        }
+        
+        // Switch viewer
+        function switchViewer(viewer) {
+            // Update active tab
+            document.querySelectorAll('.viewer-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentViewer = viewer;
+            
+            // Update viewer info
+            document.getElementById('current-viewer').textContent = viewerInfo[viewer].name;
+            document.getElementById('viewer-info').textContent = viewerInfo[viewer].description;
+            
+            // Reload current content
+            if (currentContentState) {
+                console.log('Switching to', viewer, 'with content state');
+                loadContentStateInViewer(currentContentState, viewer);
+            } else if (currentManifest) {
+                console.log('Switching to', viewer, 'with manifest only');
+                loadManifestInViewer(currentManifest, viewer);
+            }
+        }
+        
+        // Load manifest
+        function loadManifest() {
+            const manifestUrl = document.getElementById('manifestUrl').value.trim();
+            
+            if (manifestUrl) {
+                currentManifest = manifestUrl;
+                clearContentState(); // Clear content state when loading new manifest
+                loadManifestInViewer(manifestUrl, currentViewer);
+            } else {
+                showStatus('Please enter a manifest URL', 'error');
+            }
+        }
+        
+        // Load content state from input
+        function loadContentState() {
+            const input = document.getElementById('contentStateInput').value.trim();
+            
+            if (!input) {
+                showStatus('Please enter content state JSON or encoded parameter', 'error');
+                return;
+            }
+            
+            try {
+                let contentState;
+                let encodedVersion;
+                
+                // Check if it's raw JSON
+                if (input.startsWith('{')) {
+                    // Raw JSON input - encode as base64
+                    contentState = JSON.parse(input);
+                    encodedVersion = btoa(JSON.stringify(contentState));
+                } else {
+                    // Try to decode as base64 first, then URL encoding
+                    try {
+                        const decodedJson = atob(input);
+                        contentState = JSON.parse(decodedJson);
+                        encodedVersion = input; // Keep original base64
+                        console.log('Parsed as base64 content state');
+                    } catch (base64Error) {
+                        // Fallback to URL decoding
+                        try {
+                            const decodedJson = decodeURIComponent(input);
+                            contentState = JSON.parse(decodedJson);
+                            // Convert to base64 for consistency
+                            encodedVersion = btoa(JSON.stringify(contentState));
+                            console.log('Parsed as URL-encoded content state, converted to base64');
+                        } catch (urlError) {
+                            throw new Error('Invalid encoding format - must be JSON, base64, or URL-encoded');
+                        }
+                    }
+                }
+                
+                handleContentState(contentState, encodedVersion);
+                
+            } catch (error) {
+                showStatus('Invalid content state format: ' + error.message, 'error');
+                console.error('Content state parsing error:', error);
+            }
+        }
+        
+        // Load manifest in viewer
+        function loadManifestInViewer(manifestUrl, viewer) {
+            showStatus('Loading manifest...', 'info');
+            
+            let viewerUrl;
+            
+            if (viewer === 'mirador') {
+                viewerUrl = `https://projectmirador.org/embed/?iiif-content=${encodeURIComponent(manifestUrl)}`;
+            } else {
+                viewerUrl = `https://theseusviewer.org/?manifest=${encodeURIComponent(manifestUrl)}`;
+            }
+            
+            const iframe = document.getElementById('iframe-viewer');
+            iframe.src = viewerUrl;
+            
+            iframe.onload = function() {
+                showStatus(`Manifest loaded in ${viewerInfo[viewer].name}`, 'success');
+            };
+            
+            iframe.onerror = function() {
+                showStatus(`Failed to load manifest in ${viewerInfo[viewer].name}`, 'error');
+            };
+        }
+        
+        // Load content state in viewer
+        function loadContentStateInViewer(contentState, viewer) {
+            showStatus('Loading content state...', 'info');
+            
+            let viewerUrl;
+            
+            if (viewer === 'mirador') {
+                // Mirador doesn't support content states - load manifest only
+                const manifestUrl = extractManifestFromContentState(contentState);
+                if (manifestUrl) {
+                    viewerUrl = `https://projectmirador.org/embed/?iiif-content=${encodeURIComponent(manifestUrl)}`;
+                    showStatus('Loading manifest in Mirador (Content State not supported)', 'info');
+                } else {
+                    showStatus('Cannot load in Mirador - no manifest URL found', 'error');
+                    return;
+                }
+            } else if (viewer === 'theseus') {
+                // TheseusViewer supports full content state with base64 encoding
+                // Use the stored encoded version if available, otherwise encode as base64
+                let encoded = window.currentEncodedContentState;
+                if (!encoded) {
+                    encoded = btoa(JSON.stringify(contentState));
+                }
+                
+                viewerUrl = `https://theseusviewer.org/?iiif-content=${encoded}`;
+                console.log('Loading TheseusViewer with base64 content state:', encoded.substring(0, 50) + '...');
+            } else {
+                showStatus(`Unknown viewer: ${viewer}`, 'error');
+                return;
+            }
+            
+            const iframe = document.getElementById('iframe-viewer');
+            console.log('Setting iframe src to:', viewerUrl);
+            iframe.src = viewerUrl;
+            
+            iframe.onload = function() {
+                if (viewer === 'mirador') {
+                    showStatus(`Manifest loaded in ${viewerInfo[viewer].name} (no region highlighting)`, 'success');
+                } else {
+                    showStatus(`Content state loaded in ${viewerInfo[viewer].name} with region highlighting`, 'success');
+                }
+            };
+            
+            iframe.onerror = function() {
+                showStatus(`Failed to load in ${viewerInfo[viewer].name}`, 'error');
+            };
+        }
+        
+        // Extract manifest URL from content state
+        function extractManifestFromContentState(contentState) {
+            if (contentState.partOf && contentState.partOf[0] && contentState.partOf[0].id) {
+                return contentState.partOf[0].id;
+            }
+            return null;
+        }
+        
+        // Clear content state
+        function clearContentState() {
+            currentContentState = null;
+            clearContentStateDisplay();
+            
+            // Reload with just the manifest if available
+            if (currentManifest) {
+                loadManifestInViewer(currentManifest, currentViewer);
+                showStatus('Content state cleared', 'success');
+            }
+        }
+        
+        // Clear content state display
+        function clearContentStateDisplay() {
+            document.getElementById('contentStateSection').style.display = 'none';
+            document.getElementById('contentStateBanner').style.display = 'none';
+            document.getElementById('contentStateInput').value = '';
+        }
+        
+        // Validate manifest
+        async function validateManifest() {
+            let manifestUrl = document.getElementById('manifestUrl').value.trim();
+            
+            // If we have a content state, extract manifest from it
+            if (!manifestUrl && currentContentState) {
+                manifestUrl = extractManifestFromContentState(currentContentState);
+            }
+            
+            if (!manifestUrl) {
+                showStatus('Please enter a manifest URL or load a content state', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(manifestUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const manifest = await response.json();
+                
+                // Validate manifest
+                const validation = validateIIIFManifest(manifest);
+                displayValidationResults(validation);
+            } catch (error) {
+                showStatus('Failed to fetch manifest: ' + error.message, 'error');
+            }
+        }
+        
+        // Validate IIIF manifest
+        function validateIIIFManifest(manifest) {
+            const results = [];
+            
+            // Basic IIIF validation
+            if (manifest['@context'] && manifest['@context'].includes('http://iiif.io/api/presentation/3/context.json')) {
+                results.push({valid: true, message: 'Valid IIIF 3.0 context'});
+            } else if (manifest['@context'] && manifest['@context'].includes('http://iiif.io/api/presentation/2/context.json')) {
+                results.push({valid: true, message: 'Valid IIIF 2.1 context'});
+            } else {
+                results.push({valid: false, message: 'Missing or invalid @context'});
+            }
+            
+            if (manifest.id || manifest['@id']) {
+                results.push({valid: true, message: 'Valid id'});
+            } else {
+                results.push({valid: false, message: 'Missing id'});
+            }
+            
+            if (manifest.type === 'Manifest' || manifest['@type'] === 'sc:Manifest') {
+                results.push({valid: true, message: 'Valid type'});
+            } else {
+                results.push({valid: false, message: 'Invalid type'});
+            }
+            
+            if (manifest.label) {
+                results.push({valid: true, message: 'Valid label'});
+            } else {
+                results.push({valid: false, message: 'Missing label'});
+            }
+            
+            // Check for items (IIIF 3.0) or sequences (IIIF 2.1)
+            const items = manifest.items || (manifest.sequences && manifest.sequences[0] && manifest.sequences[0].canvases);
+            if (items && items.length > 0) {
+                results.push({valid: true, message: `${items.length} canvas(es) found`});
+                
+                // Check for multi-canvas vs composition
+                if (items.length > 1) {
+                    results.push({valid: true, message: 'Multi-canvas manifest detected - good for Content State'});
+                } else {
+                    const canvas = items[0];
+                    const annotations = canvas.items ? canvas.items[0].items : 
+                                     canvas.images ? canvas.images : [];
+                    
+                    if (annotations && annotations.length > 1) {
+                        results.push({valid: true, message: `Composition with ${annotations.length} images`});
+                        
+                        // Check target format
+                        const firstTarget = annotations[0].target;
+                        if (typeof firstTarget === 'string') {
+                            results.push({valid: true, message: 'Cookbook-style targets (good for Mirador/TheseusViewer)'});
+                        } else if (typeof firstTarget === 'object') {
+                            results.push({valid: true, message: 'Object-style targets (good for all viewers)'});
+                        }
+                    }
+                }
+                
+                // Content State compatibility check
+                results.push({valid: true, message: 'Compatible with Content State generation (Recipe 0485)'});
+                
+            } else {
+                results.push({valid: false, message: 'No items found'});
+            }
+            
+            return results;
+        }
+        
+        // Display validation results
+        function displayValidationResults(results) {
+            const container = document.getElementById('validation-results');
+            container.innerHTML = results.map(result => 
+                `<div class="validation-item ${result.valid ? 'valid' : 'invalid'}">
+                    ${result.valid ? '✅' : '❌'} ${result.message}
+                </div>`
+            ).join('');
+            container.style.display = 'block';
+        }
+        
+        // Show status
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    if (statusDiv.style.display !== 'none') {
+                        statusDiv.style.display = 'none';
+                    }
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
