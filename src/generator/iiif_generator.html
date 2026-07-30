@@ -1167,6 +1167,7 @@
         let selectedLibraryItems = new Set();
 
         let currentIndividualManifest = null;
+        let currentImageProfile = 'level2';
         let currentComparisonManifest = null;
         let selectedViewer = 'universal';
         let advancedOptionsVisible = false;
@@ -1428,6 +1429,18 @@
         }
 
         // Auto-fetch IIIF info
+        // Extracts a clean "level0"/"level1"/"level2" from an info.json response's
+        // profile field (IIIF Image API 3.0 uses a plain string, 2.x an array whose
+        // first element is a profile URL) or an existing manifest's service.profile.
+        // Defaults to "level2" only when the source genuinely doesn't say.
+        function normalizeProfile(raw) {
+            if (!raw) return 'level2';
+            const val = Array.isArray(raw) ? raw[0] : raw;
+            if (typeof val !== 'string') return 'level2';
+            const match = val.match(/level([0-2])/);
+            return match ? `level${match[1]}` : 'level2';
+        }
+
         async function fetchImageInfo() {
             const serviceId = document.getElementById('imageService').value.trim();
             if (!serviceId) {
@@ -1443,8 +1456,9 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const info = await response.json();
-                
+
                 if (info.width && info.height) {
+                    currentImageProfile = normalizeProfile(info.profile);
                     document.getElementById('imageWidth').value = info.width;
                     document.getElementById('imageHeight').value = info.height;
                     document.getElementById('widthStatus').innerHTML = '<em style="color: #27ae60;">✓</em>';
@@ -1466,6 +1480,7 @@
                     throw new Error('No dimensions found');
                 }
             } catch (error) {
+                currentImageProfile = 'level2';
                 document.getElementById('widthStatus').innerHTML = '<em style="color: #e74c3c;">✗</em>';
                 document.getElementById('heightStatus').innerHTML = '<em style="color: #e74c3c;">✗</em>';
                 document.getElementById('imageThumbPreview').style.display = 'none';
@@ -1553,7 +1568,7 @@
                             "service": [{
                                 "id": imageService,
                                 "type": "ImageService3",
-                                "profile": "level2"
+                                "profile": currentImageProfile
                             }]
                         }
                     }]
@@ -1581,7 +1596,8 @@
                     imageUrl: imageUrl,
                     serviceId: imageService,
                     width: width,
-                    height: height
+                    height: height,
+                    profile: currentImageProfile
                 }
             };
             
@@ -1703,11 +1719,12 @@
                         let derivativeX = padding;
                         
                         for (let i = 1; i < comparisonImages.length; i++) {
+                            const derivImg = comparisonImages[i];
                             positions.push({
                                 x: derivativeX,
                                 y: derivativeY,
                                 displayWidth: derivativeWidth,
-                                displayHeight: Math.round(derivativeWidth * 0.75)
+                                displayHeight: Math.round(derivativeWidth * (derivImg.height / derivImg.width))
                             });
                             derivativeX += derivativeWidth + padding;
                         }
@@ -1717,16 +1734,25 @@
                 case 'grid-2x2':
                     const gridCellWidth = (canvasWidth - padding * 3) / 2;
                     const gridCellHeight = (canvasHeight - padding * 3) / 2;
-                    
-                    comparisonImages.forEach((img, index) => {
+
+                    if (comparisonImages.length > 4) {
+                        showMessage('2x2 Grid only shows the first 4 images; the rest are left unpositioned.', 'error');
+                    }
+
+                    comparisonImages.slice(0, 4).forEach((img, index) => {
                         const row = Math.floor(index / 2);
                         const col = index % 2;
-                        
+                        const cellScale = Math.min(gridCellWidth / img.width, gridCellHeight / img.height);
+                        const fitWidth = Math.round(img.width * cellScale);
+                        const fitHeight = Math.round(img.height * cellScale);
+                        const cellX = padding + col * (gridCellWidth + padding);
+                        const cellY = padding + row * (gridCellHeight + padding);
+
                         positions.push({
-                            x: padding + col * (gridCellWidth + padding),
-                            y: padding + row * (gridCellHeight + padding),
-                            displayWidth: gridCellWidth,
-                            displayHeight: gridCellHeight
+                            x: Math.round(cellX + (gridCellWidth - fitWidth) / 2),
+                            y: Math.round(cellY + (gridCellHeight - fitHeight) / 2),
+                            displayWidth: fitWidth,
+                            displayHeight: fitHeight
                         });
                     });
                     break;
@@ -2011,7 +2037,7 @@
                                     "service": [{
                                         "id": img.serviceId,
                                         "type": "ImageService3",
-                                        "profile": "level2"
+                                        "profile": img.profile || 'level2'
                                     }]
                                 }
                             }]
@@ -2075,7 +2101,7 @@
                                     "service": [{
                                         "id": img.serviceId,
                                         "type": "ImageService3",
-                                        "profile": "level2"
+                                        "profile": img.profile || 'level2'
                                     }]
                                 },
                                 "target": `${baseUrl}/${manifestId}/canvas/layout#xywh=${x},${y},${w},${h}`
@@ -2189,7 +2215,7 @@
                             "format":  "image/jpeg",
                             "width":   m.width  || 1000,
                             "height":  m.height || 700,
-                            "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": "level2" }]
+                            "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": m.profile || 'level2' }]
                         }
                     }]
                 }],
@@ -2656,7 +2682,8 @@
                     imageUrl: img.imageUrl,
                     serviceId: img.serviceId,
                     width: img.width,
-                    height: img.height
+                    height: img.height,
+                    profile: img.profile || 'level2'
                 }
             }));
         }
@@ -2688,6 +2715,7 @@
                     const annLabel = getLabelText(annotation.label) || getLabelText(body.label);
                     // If the canvas label is generic ("Canvas 34"), prefer the summary/description as title
                     const title = annLabel || (isGenericLabel(canvasLabel) && canvasSummary ? canvasSummary : canvasLabel);
+                    const bodySvc = Array.isArray(body.service) ? body.service[0] : body.service;
                     images.push({
                         id: annotation.id || `${canvas.id || 'canvas'}-${images.length + 1}`,
                         title,
@@ -2695,7 +2723,8 @@
                         imageUrl,
                         serviceId: extractServiceId(body) || imageUrl,
                         width: parseInt(body.width || canvas.width || 1000, 10) || 1000,
-                        height: parseInt(body.height || canvas.height || 700, 10) || 700
+                        height: parseInt(body.height || canvas.height || 700, 10) || 700,
+                        profile: normalizeProfile(bodySvc?.profile)
                     });
                 });
             });
@@ -2721,6 +2750,7 @@
                         const serviceId = svc ? (svc['@id'] || svc.id || '') : '';
                         const annLabel = getLabelText(ann.label);
                         const title = annLabel || (isGenericLabel(canvasLabel) && canvasDesc ? canvasDesc : canvasLabel);
+                        const svcObj = Array.isArray(svc) ? svc[0] : svc;
                         images.push({
                             id: ann['@id'] || canvas['@id'] || `canvas-${images.length + 1}`,
                             title,
@@ -2728,7 +2758,8 @@
                             imageUrl,
                             serviceId: serviceId || imageUrl,
                             width: parseInt(resource.width || canvas.width || 1000, 10) || 1000,
-                            height: parseInt(resource.height || canvas.height || 700, 10) || 700
+                            height: parseInt(resource.height || canvas.height || 700, 10) || 700,
+                            profile: normalizeProfile(svcObj?.profile)
                         });
                     });
                 });
@@ -2807,6 +2838,7 @@
                     serviceId: item.metadata.serviceId,
                     width: item.metadata.width,
                     height: item.metadata.height,
+                    profile: item.metadata.profile || 'level2',
                     rights: item.metadata.rights || '',
                     provenance: item.metadata.provenance || null,
                     rotation: 0,
@@ -3040,8 +3072,8 @@
                             results.push({valid: false, message: `Canvas ${ci + 1}, annotation ${ai + 1}: body missing id`});
                     });
                     if (items.length === 1 && annotations.length > 1) {
-                        const target = annotations[0].target;
-                        typeof target === 'string' && target.includes('#xywh=')
+                        const hasXywh = annotations.some(a => typeof a.target === 'string' && a.target.includes('#xywh='));
+                        hasXywh
                             ? results.push({valid: true, message: `Single-canvas composition: ${annotations.length} images with xywh targets`})
                             : results.push({valid: false, message: 'Single-canvas composition: targets missing #xywh fragment'});
                     } else {
@@ -3749,7 +3781,8 @@
                 if (!m.serviceId) return;
                 laCreateLayer(m.serviceId, m.width, m.height, {
                     title: m.title, description: m.description || '',
-                    date: m.date || '', institution: m.institution || '', rights: m.rights || ''
+                    date: m.date || '', institution: m.institution || '', rights: m.rights || '',
+                    profile: m.profile || 'level2'
                 });
             });
             laLibSelected.clear();
@@ -3816,7 +3849,7 @@
             const sid = laDeriveServiceId(url);
             try {
                 const info = await laFetchInfo(sid);
-                laCreateLayer(sid, info.w, info.h, { title: sid.split('/').filter(Boolean).pop() || 'Layer' });
+                laCreateLayer(sid, info.w, info.h, { title: sid.split('/').filter(Boolean).pop() || 'Layer', profile: info.profile });
                 urlEl.value = '';
                 laShowMsg('Layer added.', 'success');
                 setTimeout(() => laShowMsg(''), 2000);
@@ -3855,7 +3888,7 @@
             if (!res.ok) throw new Error('fetch failed');
             const j = await res.json();
             if (!j.width || !j.height) throw new Error('no dimensions');
-            return { w: j.width, h: j.height };
+            return { w: j.width, h: j.height, profile: normalizeProfile(j.profile) };
         }
 
         function laShowMsg(text, type) {
@@ -3879,6 +3912,7 @@
                 date:        meta?.date        || '',
                 institution: meta?.institution || '',
                 rights:      meta?.rights      || '',
+                profile:     meta?.profile     || 'level2',
                 nw, nh,
                 x: 0, y: 0,
                 w: isFirst ? laCanvasW : nw,
@@ -4367,7 +4401,7 @@
                                 "id":     `${layer.serviceId}/full/max/${layer.flipH ? '!' : ''}${layer.rotation || 0}/default.jpg`,
                                 "type":   "Image", "format": "image/jpeg",
                                 "width":  layer.nw, "height": layer.nh,
-                                "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": "level2" }]
+                                "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": layer.profile || 'level2' }]
                             };
                             if (layer.title)       body.label   = { [lang]: [layer.title] };
                             if (layer.description) body.summary = { [lang]: [layer.description] };

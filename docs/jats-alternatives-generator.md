@@ -2,7 +2,7 @@
 
 **File:** `jats-alternatives-generator.html`
 **Type:** Standalone local HTML tool (no server, no network calls — everything runs in the browser)
-**Origin:** Rebuilt from two prior chats — "Converting author-numbered graphics to sequential numbering" (manual pass for hsah_0407) and "Image alternatives for article 0403" (where the manual approach was generalized into this tool).
+**Origin:** Rebuilt from two prior chats — "Converting author-numbered graphics to sequential numbering" (a manual pass for one article) and "Image alternatives for another article" (where the manual approach was generalized into this tool).
 
 ## What it does
 
@@ -11,21 +11,21 @@ Generates paired JATS `<graphic>` blocks wrapped in `<alternatives>` for HSAH fi
 Output structure:
 
 ```xml
-<!-- Figura 1 — hsah_0401_01 -->
+<!-- Figura 1 — hsah_0000_01 -->
 <alternatives>
-  <graphic specific-use="online" xlink:href="https://fotothek.biblhertz.it/iiif/3/dpub%2Fhsah0401%2Fhsah_0401_01.jp2/full/max/0/default.jpg"><alt-text>Immagine descritta in didascalia</alt-text></graphic>
-  <graphic specific-use="archival" xlink:href="hsah_0401_01.jpg"><alt-text>Immagine descritta in didascalia</alt-text></graphic>
+  <graphic specific-use="online" xlink:href="https://fotothek.biblhertz.it/iiif/3/dpub%2Fhsah0000%2Fhsah_0000_01.jp2/full/max/0/default.jpg"><alt-text>Immagine descritta in didascalia</alt-text></graphic>
+  <graphic specific-use="archival" xlink:href="hsah_0000_01.jpg"><alt-text>Immagine descritta in didascalia</alt-text></graphic>
 </alternatives>
 ```
 
-This matches the convention already live in `hsah_0401_Lenzo_mixed.xml` (confirmed against the project file): `specific-use="online"` for the IIIF graphic, `specific-use="archival"` for the local one, both carrying the same `<alt-text>`.
+This matches the convention already live in HSAH article XML files: `specific-use="online"` for the IIIF graphic, `specific-use="archival"` for the local one, both carrying the same `<alt-text>`.
 
 ## Fields
 
 | Field | Purpose |
 |---|---|
-| Article ID | e.g. `0401` — used to build filenames (`{article}_{suffix}`) |
-| Journal folder | dpub path segment, e.g. `hsah0401` — usually `hsah` + article ID with no underscore |
+| Article ID | e.g. `0000` — used to build filenames (`{article}_{suffix}`) |
+| Journal folder | dpub path segment, e.g. `hsah0000` — usually `hsah` + article ID with no underscore |
 | IIIF base URL pattern | Defaults to `https://fotothek.biblhertz.it/iiif/3`; editable if the endpoint ever changes |
 | Default alt-text | Defaults to `Immagine descritta in didascalia`; editable per batch |
 

@@ -1,8 +1,8 @@
 # Examples
 
-Real-world examples and use cases for the IIIF Editorial Toolkit.
+Illustrative example manifests and workflows for common editorial scenarios, built with the tools described in the [Generator Guide](./generator_guide.md). The JSON below is representative of the shapes each workflow produces — it is not captured output from a real run, and the institutions, artworks, and identifiers are fictional.
 
-## 🎨 Art History Use Cases
+## Art History Use Cases
 
 ### 1. Stylistic Comparison: Renaissance Masters
 
@@ -43,7 +43,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 ```
 
 **2. Build Comparison Layout**
-- Layout: "Horizontal Balanced" (equal heights)
+- Layout: "Horizontal Row (Balanced Heights)"
 - Target height: 600px
 - Padding: 100px
 - Images: Leonardo, Raphael, Michelangelo
@@ -100,7 +100,8 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 
 **4. Viewing Experience**
 - Load in Mirador 3 for annotation capabilities
-- Use OpenSeadragon viewer for detailed analysis
+- Open in TheseusViewer for deep-zoom inspection of the composited canvas
+- Test both from the Validation & Testing tab's "Test viewer compatibility" links
 - Export for publication integration
 
 ### 2. Conservation Study: Before/After Treatment
@@ -158,7 +159,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 }
 ```
 
-## 📖 Manuscript Studies
+## Manuscript Studies
 
 ### 1. Paleographic Analysis: Script Evolution
 
@@ -283,7 +284,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 }
 ```
 
-## 🏛️ Digital Humanities Projects
+## Digital Humanities Projects
 
 ### 1. Archaeological Site Documentation
 
@@ -340,7 +341,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 
 **Scenario**: Create virtual exhibition with thematic groupings.
 
-#### Grid Layout for Overview
+#### 2×2 Grid Layout for Overview
 ```json
 {
   "label": {"en": ["Medieval Illuminated Manuscripts"]},
@@ -354,19 +355,19 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
       "type": "AnnotationPage",
       "items": [
         {
-          "target": "canvas#xywh=100,100,350,250",
+          "target": "canvas#xywh=50,50,725,525",
           "body": {"id": "religious-manuscripts.jpg"}
         },
         {
-          "target": "canvas#xywh=500,100,350,250",
+          "target": "canvas#xywh=825,50,725,525",
           "body": {"id": "secular-manuscripts.jpg"}
         },
         {
-          "target": "canvas#xywh=900,100,350,250",
+          "target": "canvas#xywh=50,625,725,525",
           "body": {"id": "scientific-manuscripts.jpg"}
         },
         {
-          "target": "canvas#xywh=1300,100,350,250",
+          "target": "canvas#xywh=825,625,725,525",
           "body": {"id": "literary-manuscripts.jpg"}
         }
       ]
@@ -375,17 +376,20 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 }
 ```
 
-## 📚 Academic Publishing
+## Academic Publishing
 
 ### 1. Journal Article with Interactive Figures
 
 **Scenario**: Art history article with comparative analysis.
 
 #### HTML Integration
+
+The Clean Viewer (`minimal_iiif_viewer.html`, in `src/contentstate/`) takes a `?manifest=` parameter for a plain manifest URL like the comparison manifest below. (Use `?content=` instead only when embedding a base64-encoded Content State that highlights a specific canvas region — see the [Content State guide](./contentstate_guide.md).)
+
 ```html
 <figure>
   <iframe 
-    src="https://your-domain.com/minimal_iiif_viewer.html?content=https://example.com/comparison-content-state.json"
+    src="https://your-domain.com/minimal_iiif_viewer.html?manifest=https://example.com/comparison-manifest.json"
     width="800" 
     height="600"
     title="Interactive Comparison of Renaissance Paintings">
@@ -432,7 +436,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 ```json
 {
   "label": {"en": ["Critical Edition - Manuscript Witnesses"]},
-  "behavior": ["facing-pages"],
+  "behavior": ["paged"],
   "items": [
     {
       "id": "witness-a/folio-1r",
@@ -456,13 +460,13 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 }
 ```
 
-## 🎓 Educational Use Cases
+## Educational Use Cases
 
 ### 1. Art History Survey Course
 
 **Scenario**: Comparative slides for lecture.
 
-#### Horizontal Balanced Layout
+#### Horizontal Row (Balanced Heights) Layout
 ```json
 {
   "label": {"en": ["Lecture 5: Gothic vs Renaissance Architecture"]},
@@ -523,6 +527,13 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 
 ---
 
-These examples demonstrate the versatility of the IIIF Editorial Toolkit across different scholarly disciplines and use cases.
+## See also
 
-**See also:** [IIIF Compliance](./iiif_compliance.md) | [Generator Guide](./generator_guide.md)
+- [Generator Guide](./generator_guide.md)
+- [Comparison Layout Algorithms](./layout_algorithms.md)
+- [IIIF Compliance](./iiif_compliance.md)
+- [Content State guide](./contentstate_guide.md)
+
+---
+
+Last updated: 2026-07-30

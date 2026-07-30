@@ -1,379 +1,75 @@
 # IIIF Compliance
 
-Guide to IIIF standards compliance and best practices for academic manifests.
-
-## 📜 IIIF Standards Overview
-
-The International Image Interoperability Framework (IIIF) provides standardized APIs for sharing and viewing images across institutions and platforms.
-
-### Core APIs
-- **Presentation API 3.0**: Describes how images and their metadata are presented
-- **Image API 3.0**: Defines how images are requested and delivered
-- **Authentication API 1.0**: Handles access control (future implementation)
-- **Search API 1.0**: Enables content search (future implementation)
-
-## 🎯 Presentation API 3.0 Compliance
-
-### Required Fields
-
-#### Manifest Level
-```json
-{
-  "@context": ["http://iiif.io/api/presentation/3/context.json"],
-  "id": "https://example.com/manifest.json",
-  "type": "Manifest",
-  "label": { "en": ["Title"] }
-}
-```
-
-**Validation Points**:
-- ✅ `@context` must reference IIIF 3.0 context
-- ✅ `id` must be a valid URI
-- ✅ `type` must be "Manifest"
-- ✅ `label` must be a language map
-
-#### Canvas Level
-```json
-{
-  "id": "https://example.com/canvas/1",
-  "type": "Canvas",
-  "width": 1000,
-  "height": 693,
-  "items": [...]
-}
-```
-
-**Validation Points**:
-- ✅ `id` must be unique URI
-- ✅ `type` must be "Canvas"
-- ✅ `width` and `height` must be integers
-- ✅ `items` must contain AnnotationPage
-
-#### Annotation Level
-```json
-{
-  "id": "https://example.com/annotation/1",
-  "type": "Annotation",
-  "motivation": "painting",
-  "target": "https://example.com/canvas/1",
-  "body": {
-    "id": "https://example.com/image.jpg",
-    "type": "Image",
-    "format": "image/jpeg",
-    "service": [...]
-  }
-}
-```
-
-**Validation Points**:
-- ✅ `id` must be unique URI
-- ✅ `type` must be "Annotation"
-- ✅ `motivation` should be "painting" for images
-- ✅ `target` must reference canvas or region
-- ✅ `body` must describe image resource
-
-### Optional but Recommended Fields
-
-#### Metadata Enhancement
-```json
-{
-  "summary": { "en": ["Description of the manifest"] },
-  "metadata": [
-    {
-      "label": { "en": ["Artist"] },
-      "value": { "en": ["Leonardo da Vinci"] }
-    }
-  ],
-  "rights": "http://creativecommons.org/licenses/by/4.0/",
-  "requiredStatement": {
-    "label": { "en": ["Attribution"] },
-    "value": { "en": ["Provided by Example Institution"] }
-  }
-}
-```
-
-#### Behavioral Hints
-```json
-{
-  "behavior": ["individuals", "facing-pages"],
-  "viewingDirection": "left-to-right",
-  "viewingHint": "paged"
-}
-```
-
-## 🔧 Toolkit Compliance Features
-
-### Automatic Validation
-
-#### Generated Manifests Include:
-- ✅ Complete IIIF 3.0 context
-- ✅ Valid URI patterns
-- ✅ Proper type declarations
-- ✅ Required dimensional data
-- ✅ Complete annotation structure
-- ✅ Proper target formatting
-
-#### Built-in Validation Checks
-
-The Validation & Testing tab's **Validate manifest** button reads a pasted manifest URL or JSON and passes the parsed object to `validateIIIFManifest(manifest)`, which returns an array of `{valid, message}` results. It detects the Presentation API version from `@context` (v2 or v3), then checks `id`/`@id`, `type`, and `label`, and finally walks the canvas structure — `sequences[0].canvases` for v2 or `items[]` for v3 — reporting canvas and painting-annotation counts. Results are rendered in the panel by `displayValidationResults()`.
-
-### Target Format Compatibility
-
-#### String Targets (Cookbook Style)
-```json
-{
-  "target": "https://example.com/canvas/1#xywh=100,100,400,300"
-}
-```
-
-**Advantages**:
-- ✅ Simple and readable
-- ✅ Wide viewer support
-- ✅ Easy to parse
-- ✅ Mirador 3 compatible
-
-#### Object Targets (Structured)
-```json
-{
-  "target": {
-    "id": "https://example.com/canvas/1#xywh=100,100,400,300",
-    "type": "SpecificResource",
-    "source": "https://example.com/canvas/1"
-  }
-}
-```
-
-**Advantages**:
-- ✅ More semantic
-- ✅ Better for complex selections
-- ✅ Future-proof
-- ✅ Standards compliant
-
-## 🏛️ Image API Compliance
-
-### Service Declaration
-```json
-{
-  "service": [
-    {
-      "id": "https://example.com/iiif/image1",
-      "type": "ImageService3",
-      "profile": "level2"
-    }
-  ]
-}
-```
-
-### Profile Levels
-
-#### Level 0 (Basic)
-- Required: `info.json`, basic image serving
-- Optional: Size and format restrictions
-
-#### Level 1 (Enhanced)
-- Required: Size parameters, region extraction
-- Optional: Rotation, quality levels
-
-#### Level 2 (Full)
-- Required: All level 1 features plus rotation
-- Optional: Mirroring, advanced features
-
-### Toolkit Image Service Support
-
-#### Auto-Detection
-
-In the Individual Images tab, `fetchImageInfo()` reads the **IIIF Service ID** field, requests `{serviceId}/info.json`, and populates width/height and a thumbnail preview on success. It reports an error via the on-screen message area (not a thrown exception) if the request fails — most often due to CORS restrictions on the image server — in which case dimensions can be entered manually.
-
-There is no separate image-service profile validator; the tool only reads `width`/`height` from `info.json` and does not check `profile` or protocol level.
-
-## 🔍 Common Compliance Issues
-
-### 1. Context Problems
-
-#### Issue: Missing or Incorrect Context
-```json
-{
-  "@context": "http://iiif.io/api/presentation/2/context.json" // ❌ Wrong version
-}
-```
-
-#### Solution: Use IIIF 3.0 Context
-```json
-{
-  "@context": ["http://iiif.io/api/presentation/3/context.json"] // ✅ Correct
-}
-```
-
-### 2. URI Format Issues
-
-#### Issue: Invalid ID Format
-```json
-{
-  "id": "manifest1" // ❌ Not a valid URI
-}
-```
-
-#### Solution: Full URI
-```json
-{
-  "id": "https://example.com/manifest1.json" // ✅ Valid URI
-}
-```
-
-### 3. Language Map Problems
-
-#### Issue: String Instead of Language Map
-```json
-{
-  "label": "My Title" // ❌ Should be language map
-}
-```
-
-#### Solution: Proper Language Map
-```json
-{
-  "label": { "en": ["My Title"] } // ✅ Language map
-}
-```
-
-### 4. Canvas Dimension Issues
-
-#### Issue: Missing Dimensions
-```json
-{
-  "type": "Canvas" // ❌ Missing width/height
-}
-```
-
-#### Solution: Include Dimensions
-```json
-{
-  "type": "Canvas",
-  "width": 1000,
-  "height": 693 // ✅ Dimensions included
-}
-```
-
-### 5. Annotation Structure Problems
-
-#### Issue: Incomplete Annotation
-```json
-{
-  "type": "Annotation",
-  "target": "canvas1" // ❌ Missing motivation, body
-}
-```
-
-#### Solution: Complete Annotation
-```json
-{
-  "type": "Annotation",
-  "motivation": "painting",
-  "target": "canvas1",
-  "body": {
-    "id": "image.jpg",
-    "type": "Image",
-    "format": "image/jpeg"
-  } // ✅ Complete annotation
-}
-```
-
-## 📋 Validation Checklist
-
-### Manifest Level
-- [ ] Valid IIIF 3.0 context
-- [ ] Unique, valid ID URI
-- [ ] Correct type declaration
-- [ ] Language map for label
-- [ ] Optional: summary, metadata, rights
-
-### Canvas Level
-- [ ] Unique ID per canvas
-- [ ] Correct type declaration
-- [ ] Positive integer dimensions
-- [ ] At least one AnnotationPage
-- [ ] Optional: label, thumbnail
-
-### Annotation Level
-- [ ] Unique ID per annotation
-- [ ] Correct type declaration
-- [ ] Appropriate motivation
-- [ ] Valid target reference
-- [ ] Complete body description
-
-### Service Level
-- [ ] Valid service ID
-- [ ] Correct service type
-- [ ] Appropriate profile level
-- [ ] Accessible info.json endpoint
-
-## 🛠️ Testing Tools
-
-### Built-in Validation
-```javascript
-// Use toolkit validation
-const validation = validateIIIFManifest(manifest);
-validation.forEach(result => {
-  console.log(`${result.valid ? '✅' : '❌'} ${result.message}`);
-});
-```
-
-### External Validators
-- [IIIF Validator](https://iiif.io/api/presentation/validator/service/)
-- [Presentation API Validator](https://presentation-validator.iiif.io/)
-- [Manifest Editor](https://manifest-editor.digirati.services/)
-
-### Cross-Viewer Testing
-```javascript
-// Test in multiple viewers
-const viewers = [
-  'https://projectmirador.org/embed/',
-  'https://theseusviewer.org/',
-  'https://universalviewer.io/'
-];
-
-viewers.forEach(viewer => {
-  const testUrl = `${viewer}?manifest=${encodeURIComponent(manifestUrl)}`;
-  console.log(`Test in: ${testUrl}`);
-});
-```
-
-## 📊 Compliance Levels
-
-### Level 1: Basic Compliance
-- ✅ Valid IIIF 3.0 structure
-- ✅ Required fields present
-- ✅ Proper type declarations
-- ✅ Basic viewing works
-
-### Level 2: Enhanced Compliance
-- ✅ Level 1 requirements
-- ✅ Rich metadata included
-- ✅ Proper language maps
-- ✅ Thumbnail support
-- ✅ Multi-viewer compatibility
-
-### Level 3: Full Compliance
-- ✅ Level 2 requirements
-- ✅ Advanced features (behaviors, hints)
-- ✅ Authentication support
-- ✅ Search API integration
-- ✅ Comprehensive testing
-
-## 🔮 Future Considerations
-
-### Upcoming Standards
-- **IIIF 4.0**: Enhanced annotation support
-- **Web Annotation**: W3C standard integration
-- **Linked Data**: RDF/JSON-LD improvements
-- **Authentication 2.0**: Enhanced access control
-
-### Best Practices Evolution
-- **Performance**: Optimize for mobile devices
-- **Accessibility**: Screen reader compatibility
-- **Internationalization**: Multi-language support
-- **Preservation**: Long-term archival considerations
+What this toolkit actually generates and checks against the IIIF Presentation and Image APIs, and where its built-in validator falls short. For the full tab-by-tab workflow, see the [Generator Guide](./generator_guide.md).
 
 ---
 
-**See also:** [Examples](./examples.md) | [Generator Guide](./generator_guide.md)
+## What the generator writes
+
+Every manifest produced by `src/generator/iiif_generator.html` (Individual Images, Comparison Layouts, Layer Alignment, Collection) follows the same fixed structure:
+
+- `@context`: always `["http://iiif.io/api/presentation/3/context.json"]` — the tool only ever emits Presentation API 3.0, never 2.0.
+- `id`: always an absolute URL, `{Base URL}/{manifestId}.json`.
+- `type`: always `"Manifest"`.
+- `label`: always a language map keyed by the BCP47 code(s) chosen in the form — never a bare string.
+- Canvas `width`/`height`: taken from the fetched or manually entered image dimensions; always present when a manifest is generated (the form requires them).
+- Annotation `motivation`: always `"painting"`.
+- Annotation `body`: always includes `id`, `type: "Image"`, `format: "image/jpeg"`, and a `service` array.
+
+The `service.profile` value reflects the real server capability whenever the toolkit has it: `fetchImageInfo()` (Individual Images) and `laFetchInfo()` (Layer Alignment) both read the actual `profile` field from the fetched `info.json` and normalize it (`normalizeProfile()`, handling both the Image API 3.0 plain-string form and the 2.x array form); importing an existing manifest (`extractImagesV3`/`extractImagesV2`) reads the profile the source manifest already declares. That value then flows through library storage and into Comparison Layouts and library-regenerated manifests. `"level2"` is used only as a fallback when no real value was ever available — e.g. dimensions entered by hand instead of fetched.
+
+**Target format:** every annotation `target` the tool writes is a plain string — either the bare canvas ID, or `{canvasId}#xywh=x,y,w,h`. The toolkit never emits IIIF's alternative object-form target (`{"type": "SpecificResource", "source": ..., "selector": ...}`). If you need that form, it has to be added by hand after export.
+
+---
+
+## Built-in validator (Validation & Testing tab)
+
+Clicking **Validate manifest** passes the parsed JSON to `validateIIIFManifest(manifest)` (`iiif_generator.html:3007`), which returns an array of `{valid, message}` objects rendered by `displayValidationResults()` (`iiif_generator.html:3088`) as PASS/FAIL lines.
+
+What it checks, in order:
+
+1. **Version** — detected by substring match on `@context` (`presentation/3` vs `presentation/2`). No match is reported as a failure.
+2. **Identity** — presence of `id` or `@id`.
+3. **Type** — must be `"Manifest"` (v3) or `"sc:Manifest"` (v2).
+4. **Label** — presence only, not language-map structure.
+5. **Canvas structure**:
+   - v2: reads `sequences[0].canvases`; for each canvas, checks `images[0].resource` has an `@id`/`id`.
+   - v3: reads `items[]`; for each canvas, checks `width`/`height` are *present* (truthy check, not type- or value-validated), then flattens `items[].items` to get painting annotations, flags any whose `motivation` isn't `"painting"`, and checks each annotation body has an `id`.
+
+When a manifest has exactly one canvas with more than one painting annotation, the validator treats it as a single-canvas composition and checks whether *any* annotation's target has a `#xywh=` fragment (`iiif_generator.html:3075-3078`). This correctly handles a Layer Alignment export where the full-canvas base layer (target = bare canvas ID, no fragment) sits alongside positioned detail layers with `#xywh` fragments, regardless of which order they appear in — previously this check only looked at `annotations[0]` and could false-FAIL a valid export depending on layer order.
+
+The validator does not check `service`/`profile` values, and has no code path for the Authentication API or Search API — neither is referenced anywhere in the toolkit, so there's no support to look for.
+
+---
+
+## Image API: auto-detection
+
+In the Individual Images tab, `fetchImageInfo()` (`iiif_generator.html:1444`) reads the **IIIF Service ID** field, requests `{serviceId}/info.json`, and on success populates width/height and a thumbnail preview. On failure — most commonly a CORS restriction on the image server — it reports the error through the on-screen message area (`showMessage`) rather than throwing, and the dimensions can then be entered manually.
+
+The tool also reads the server's declared `profile` from the same `info.json` response and carries it into the generated manifest's `service` block (see above) — it isn't validated against what the server can actually do beyond that, so a server misreporting its own profile would still be trusted as-is.
+
+---
+
+## Viewer compatibility testing
+
+**Test viewer compatibility** (`testViewerCompatibility()`, `iiif_generator.html:3098`) builds direct links to:
+
+- Mirador 3 (`https://projectmirador.org/embed/?iiif-content=...`)
+- TheseusViewer (`https://theseusviewer.org/?manifest=...`)
+- Universal Viewer (`https://uv-v4.netlify.app/#?manifest=...`)
+
+This requires network access to those services and does not validate anything locally beyond generating the links — actually loading the manifest in each viewer is the real test.
+
+---
+
+## External validators
+
+For checks beyond what the toolkit itself performs, use:
+
+- [IIIF Presentation Validator](https://presentation-validator.iiif.io/)
+- [IIIF Validator (general)](https://iiif.io/api/presentation/validator/service/)
+- [Manifest Editor](https://manifest-editor.digirati.services/)
+
+---
+
+Last updated: 2026-07-30
