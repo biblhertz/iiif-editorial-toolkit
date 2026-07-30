@@ -4,9 +4,9 @@ Extracts <fig> elements from <body>, fetches dimensions from info.json,
 and writes a multi-canvas manifest ready for upload.
 
 Usage:
-    python xml_to_manifest.py article.xml
-    python xml_to_manifest.py article.xml output.json
-    python xml_to_manifest.py article.xml output.json my_config.json
+    python xml-to-manifest.py article.xml
+    python xml-to-manifest.py article.xml output.json
+    python xml-to-manifest.py article.xml output.json my_config.json
 """
 
 import json

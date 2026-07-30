@@ -32,7 +32,7 @@ The pipeline consists of three files:
 3. Open a terminal in that folder and run:
 
 ```bash
-python xml_to_manifest.py article.xml output.json
+python xml-to-manifest.py article.xml output.json
 ```
 
 The manifest will be written to `output.json`, ready for upload.
@@ -92,7 +92,7 @@ python xml-to-manifest.py article.xml
 python xml-to-manifest.py article.xml my_output.json
 
 # Custom config file (e.g. for a different journal or institution)
-python xml_to_manifest.py article.xml my_output.json my_config.json
+python xml-to-manifest.py article.xml my_output.json my_config.json
 ```
 
 ---
