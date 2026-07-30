@@ -4008,17 +4008,30 @@
             if (l) { laPushUndo(); l.x = 0; l.y = 0; l.w = laCanvasW; l.h = laCanvasH; laPosDiv(l); laRenderPanel(); saveLayerSession(); }
         }
 
+        // Recomputes a layer's bounding box for a new rotation, keeping its
+        // visual center fixed (like rotating an object in place in any design
+        // tool) rather than anchoring the old top-left corner — anchoring the
+        // corner lets the box grow asymmetrically and silently walks the
+        // layer away from where it visually was, sometimes by a huge amount.
+        function laApplyRotation(l, newRot) {
+            const oldRot = l.rotation || 0;
+            const oldBounds = rotatedBounds(l.nw, l.nh, oldRot);
+            const newBounds = rotatedBounds(l.nw, l.nh, newRot);
+            const newW = newBounds.w * (l.w / oldBounds.w);
+            const newH = newBounds.h * (l.h / oldBounds.h);
+            l.x += (l.w - newW) / 2;
+            l.y += (l.h - newH) / 2;
+            l.w = newW;
+            l.h = newH;
+            l.rotation = newRot;
+        }
+
         function laRotateLayer(id, delta) {
             const l = laLayers.find(l => l.id === id);
             if (!l) return;
             laPushUndo();
-            const oldRot = l.rotation || 0;
-            const newRot = ((oldRot + delta) % 360 + 360) % 360;
-            const oldBounds = rotatedBounds(l.nw, l.nh, oldRot);
-            const newBounds = rotatedBounds(l.nw, l.nh, newRot);
-            l.w = newBounds.w * (l.w / oldBounds.w);
-            l.h = newBounds.h * (l.h / oldBounds.h);
-            l.rotation = newRot;
+            const newRot = (((l.rotation || 0) + delta) % 360 + 360) % 360;
+            laApplyRotation(l, newRot);
             laPosDiv(l);
             laRenderPanel();
             saveLayerSession();
@@ -4029,12 +4042,7 @@
             if (!l) return;
             laPushUndo();
             const newRot = Math.round(((+val) % 360 + 360) % 360);
-            const oldRot = l.rotation || 0;
-            const oldBounds = rotatedBounds(l.nw, l.nh, oldRot);
-            const newBounds = rotatedBounds(l.nw, l.nh, newRot);
-            l.w = newBounds.w * (l.w / oldBounds.w);
-            l.h = newBounds.h * (l.h / oldBounds.h);
-            l.rotation = newRot;
+            laApplyRotation(l, newRot);
             laPosDiv(l);
             laRenderPanel();
             saveLayerSession();
