@@ -968,6 +968,10 @@
                 <button class="button secondary" onclick="laSnapAllToCanvas()" style="font-size:12px; padding:5px 12px;">Snap all to canvas</button>
                 <span style="font-size:12px; color:#888; margin-left:8px;">Sets every layer to fill the full canvas area (useful before precise repositioning)</span>
             </div>
+            <div style="margin-bottom:6px;">
+                <button class="button secondary" onclick="laFitCanvasToLayers()" style="font-size:12px; padding:5px 12px;">Fit canvas to layers</button>
+                <span style="font-size:12px; color:#888; margin-left:8px;">Resizes the canvas to exactly contain every layer and shifts them so nothing sits outside it (e.g. after rotating a layer past the edge)</span>
+            </div>
             <div id="laCanvasSizeRow" style="display:none; margin-bottom:10px; font-size:12px; color:#555; align-items:center; gap:8px; flex-wrap:wrap;">
                 <span>Canvas size:</span>
                 <input type="number" id="laCanvasWInput" min="1" style="width:74px; padding:3px 6px;" placeholder="Width"
@@ -4065,6 +4069,23 @@
             showMessage('All layers snapped to canvas.', 'success');
         }
 
+        function laFitCanvasToLayers() {
+            if (!laLayers.length) { laShowMsg('No layers to fit.', 'error'); return; }
+            laPushUndo();
+            const minX = Math.min(...laLayers.map(l => l.x));
+            const minY = Math.min(...laLayers.map(l => l.y));
+            const maxX = Math.max(...laLayers.map(l => l.x + l.w));
+            const maxY = Math.max(...laLayers.map(l => l.y + l.h));
+            laLayers.forEach(l => { l.x -= minX; l.y -= minY; laPosDiv(l); });
+            laCanvasW = Math.round(maxX - minX);
+            laCanvasH = Math.round(maxY - minY);
+            laRecalcScale();
+            laRenderAll();
+            saveLayerSession();
+            laShowMsg(`Canvas resized to ${laCanvasW}×${laCanvasH} to fit all layers.`, 'success');
+            setTimeout(() => laShowMsg(''), 3000);
+        }
+
         function laApplyCanvasResize() {
             const w = parseInt(document.getElementById('laCanvasWInput').value);
             const h = parseInt(document.getElementById('laCanvasHInput').value);
@@ -4420,6 +4441,12 @@
             const baseUrl = (document.getElementById('laBaseUrl').value.trim() || document.getElementById('baseUrl').value.trim() || 'https://example.org/manifests').replace(/\/$/, '');
             if (!title)         { showMessage('Enter a manifest title.', 'error'); return; }
             if (!laLayers.length) { showMessage('Add at least one layer.', 'error'); return; }
+
+            const outOfBounds = laLayers.some(l =>
+                l.x < 0 || l.y < 0 || l.x + l.w > laCanvasW || l.y + l.h > laCanvasH);
+            if (outOfBounds) {
+                showMessage('Warning: one or more layers extend outside the canvas (e.g. from rotating near an edge) — the manifest was still generated, but consider "Fit canvas to layers" first.', 'error');
+            }
 
             const mid      = `layered-${Date.now()}`;
             const canvasId = `${baseUrl}/${mid}/canvas/1`;

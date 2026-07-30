@@ -162,7 +162,7 @@ Use this tab to position images of different sizes on a shared canvas and export
 
 **By URL:** Paste a IIIF Image URL or bare service ID and click **Add layer**. If the image dimensions cannot be fetched automatically, a manual entry form appears — enter width and height and click **Add**.
 
-Each added layer appears in the layer list in Step 2 with a colour-coded label. To quickly set every layer to fill the entire canvas (the typical starting point for an opacity comparison), click **Snap all to canvas** at the top of Step 2.
+Each added layer appears in the layer list in Step 2 with a colour-coded label. To quickly set every layer to fill the entire canvas (the typical starting point for an opacity comparison), click **Snap all to canvas** at the top of Step 2. Conversely, **Fit canvas to layers** resizes the canvas to exactly contain every current layer and shifts them so nothing sits outside it — useful after rotating a layer near the canvas edge, since rotation can grow a layer's footprint past the original bounds.
 
 ### Step 2 — Arrange in the canvas workspace
 
@@ -182,7 +182,7 @@ The workspace shows a scaled-down representation of the canvas. The canvas is si
 
 **Per-layer metadata:** Each layer has collapsible fields for title, description, date, institution, and rights. These are embedded in the exported manifest so viewers can name and describe individual layers.
 
-**Rotate:** The panel header contains ↺ (counter-clockwise 90°) and ↻ (clockwise 90°) buttons, plus a numeric input for arbitrary integer rotation from 0 to 359°. The **Natural size** button respects the current rotation: at 0° or 180° it restores the layer to its original dimensions; at 90° or 270° it applies the transposed dimensions (original height becomes the width and vice versa).
+**Rotate:** The panel header contains ↺ (counter-clockwise 90°) and ↻ (clockwise 90°) buttons, plus a numeric input for arbitrary integer rotation from 0 to 359°. Rotating a layer resizes its on-canvas footprint to the true rotated bounding box (larger than the original at any angle other than 0°/180°) while keeping the layer centered on the same spot — the box grows around the image rather than shifting away from it. The **Natural size** button resets the layer to its true rotated-native size at the current angle.
 
 **Flip/mirror:** The ↔ button in the panel header toggles horizontal mirroring. The button is highlighted in blue when mirroring is active. Mirror is applied before rotation, following the IIIF Image API `!` parameter convention.
 
