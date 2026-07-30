@@ -100,9 +100,9 @@ Either way, it builds a `theseusviewer.org` embed URL and loads it in an iframe,
 
 ## Companion viewer: Test Viewer (`iiif_viewer.html`)
 
-A debug tool for checking a Content State before using it elsewhere. It reads the same `?content=`-style parameters, extracts and validates the referenced manifest, and displays the decoded Content State info alongside a line-by-line IIIF compliance check (same validation logic as the main [Multi-Viewer Tester](./multi_viewer_tester_manual.md)). It has two viewer tabs — **Mirador 3** and **TheseusViewer** — so you can compare how the manifest looks in each; Mirador loads the plain manifest (no region highlight, per the compatibility note above) and TheseusViewer loads the actual encoded Content State.
+A debug tool for checking a Content State before using it elsewhere. It reads the same `?content=`-style parameters, extracts and validates the referenced manifest, and displays the decoded Content State info alongside a line-by-line IIIF compliance check. It has two viewer tabs — **Mirador 3** and **TheseusViewer** — so you can compare how the manifest looks in each; Mirador loads the plain manifest (no region highlight, per the compatibility note above) and TheseusViewer loads the actual encoded Content State.
 
-Both companion files live alongside the generator in `src/contentstate/` and are unrelated to `src/viewer/iiif_viewer.html` (the main Multi-Viewer Tester) despite the shared filename.
+Both companion files live alongside the generator in `src/contentstate/`.
 
 ---
 

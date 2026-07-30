@@ -385,7 +385,7 @@ Real-world examples and use cases for the IIIF Editorial Toolkit.
 ```html
 <figure>
   <iframe 
-    src="https://your-domain.com/osd_viewer.html?manifest=https://example.com/comparison-manifest.json"
+    src="https://your-domain.com/minimal_iiif_viewer.html?content=https://example.com/comparison-content-state.json"
     width="800" 
     height="600"
     title="Interactive Comparison of Renaissance Paintings">

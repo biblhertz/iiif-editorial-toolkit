@@ -30,13 +30,8 @@ iiif-editorial-toolkit/
 ├── src/
 │   ├── generator/
 │   │   └── iiif_generator.html    # Main manifest generator (5 tabs, see below)
-│   ├── openseadragon/
-│   │   ├── osd_generator.html     # OpenSeadragon-focused generator
-│   │   └── osd_viewer.html        # Specialized OSD viewer
 │   ├── size_updater/
 │   │   └── IIIF_manifest_dimension_updater.html  # Fetch real image sizes into an existing manifest
-│   ├── viewer/
-│   │   └── iiif_viewer.html       # Multi-viewer compatibility tester (Mirador 3 / TheseusViewer)
 │   ├── contentstate/
 │   │   ├── iiif_contentstate_generator.html  # IIIF Content State (deep-link) generator, with pan/zoom preview
 │   │   ├── iiif_viewer.html                  # Test viewer for generated content states
@@ -76,37 +71,22 @@ A single HTML file with five tabs:
 
 **Use Cases:** art history comparisons, manuscript analysis, multi-image scholarly publications, complex positioning requirements.
 
-### 2. OpenSeadragon Generator (`src/openseadragon/osd_generator.html`)
-**Best for:** single-canvas compositions optimized for OpenSeadragon.
-
-Simplified comparison layouts, canvas-based positioning, library management. Good for quick manifest creation and teaching materials.
-
-### 3. OpenSeadragon Viewer (`src/openseadragon/osd_viewer.html`)
-**Best for:** high-performance viewing with detailed navigation.
-
-Multi-canvas navigation, positioned composition support, automatic manifest type detection, advanced zoom/pan.
-
-### 4. Multi-Viewer Testing Tool (`src/viewer/iiif_viewer.html`)
-**Best for:** testing manifest compatibility across different viewers.
-
-Mirador 3 and TheseusViewer integration, manifest validation, quick viewer switching.
-
-### 5. Manifest Dimension Updater (`src/size_updater/IIIF_manifest_dimension_updater.html`)
+### 2. Manifest Dimension Updater (`src/size_updater/IIIF_manifest_dimension_updater.html`)
 **Best for:** fixing placeholder or unknown image dimensions in an already-generated manifest.
 
 Batch-fetches real dimensions from each image's `info.json` and updates both Canvas and Image body sizes. Drag-and-drop interface with progress tracking.
 
-### 6. XML → Manifest Suite (`src/xml2manifest/`)
+### 3. XML → Manifest Suite (`src/xml2manifest/`)
 **Best for:** editorial teams converting JATS XML articles into manifests without touching the generator UI.
 
 A Python pipeline (`xml-to-manifest.py` + `manifest_config.json` + `fig-extractor.py`) that converts a JATS XML article into a IIIF Presentation API 3.0 manifest in one automated pass, fetching real image dimensions from the IIIF server. See `src/xml2manifest/readme.md`.
 
-### 7. IIIF Content State Generator (`src/contentstate/`)
+### 4. IIIF Content State Generator (`src/contentstate/`)
 **Best for:** generating a shareable deep-link (IIIF Content State) into a single region or view of an image, for citing a detail in an article.
 
-`iiif_contentstate_generator.html` builds and encodes a IIIF Content State, with a pan/zoom canvas preview (drag to pan, +/−/reset controls) for framing the target region before sharing. It links out to two companion viewers included in the same folder: `iiif_viewer.html` (a test/debug viewer for the generated content state) and `minimal_iiif_viewer.html` (a stripped-down viewer meant for embedding in published articles). Note these are unrelated to `src/viewer/iiif_viewer.html` (tool #4, the multi-viewer compatibility tester) despite the shared filename. **Important:** Mirador 3 does not support Content State — only TheseusViewer and the two companion viewers here do. See the [Content State Guide](./docs/contentstate_guide.md).
+`iiif_contentstate_generator.html` builds and encodes a IIIF Content State, with a pan/zoom canvas preview (drag to pan, +/−/reset controls) for framing the target region before sharing. It links out to two companion viewers included in the same folder: `iiif_viewer.html` (a test/debug viewer for the generated content state) and `minimal_iiif_viewer.html` (a stripped-down viewer meant for embedding in published articles). **Important:** Mirador 3 does not support Content State — only TheseusViewer and the two companion viewers here do. See the [Content State Guide](./docs/contentstate_guide.md).
 
-### 8. JATS Alternatives Generator (`src/jats_alternatives/jats-alternatives-generator.html`)
+### 5. JATS Alternatives Generator (`src/jats_alternatives/jats-alternatives-generator.html`)
 **Best for:** editorial staff preparing HSAH article XML, pairing each figure's online (IIIF) and archival image references.
 
 A standalone, no-network local tool that generates paired JATS `<graphic>` blocks wrapped in `<alternatives>` — one pointing to the Hertziana IIIF endpoint, one to the local archival file — ready to paste into article XML in place of a bare `<graphic>`. Supports sequential ranges and a custom list mode for reconciling author-numbered figures (e.g. `3a`/`3b`) against sequentially-exported filenames. See the [JATS Alternatives Generator doc](./docs/jats-alternatives-generator.md).
@@ -115,9 +95,6 @@ A standalone, no-network local tool that generates paired JATS `<graphic>` block
 
 - [Generator Guide](./docs/generator_guide.md) — complete guide to manifest generation
 - [Content State Guide](./docs/contentstate_guide.md) — deep links into a canvas region, viewer compatibility caveats
-- [Viewer Guide](./docs/viewer_guide.md) — using the viewers effectively
-- [Multi-Viewer Tester Manual](./docs/multi_viewer_tester_manual.md)
-- [OSD Viewer Documentation](./docs/osd_viewer_documentation.md)
 - [Manifest Dimension Updater](./docs/IIIF_manifest_dimension_updater_readme.md)
 - [Publishing on GitHub Pages](./docs/github_pages_guide.md) — serve your manifests publicly for free
 - [Layout Algorithms](./docs/layout_algorithms.md) — understanding positioning systems
@@ -139,8 +116,7 @@ A standalone, no-network local tool that generates paired JATS `<graphic>` block
 - IIIF Image API 2.1/3.0
 
 ### Dependencies
-- `src/generator/iiif_generator.html`, `src/size_updater/IIIF_manifest_dimension_updater.html`, and `src/viewer/iiif_viewer.html` are pure HTML/CSS/JavaScript with no third-party libraries.
-- `src/openseadragon/*` uses OpenSeadragon 4.1.0 via CDN.
+- `src/generator/`, `src/size_updater/`, `src/contentstate/`, and `src/jats_alternatives/` are pure HTML/CSS/JavaScript with no third-party libraries.
 - `src/xml2manifest/*` requires Python 3.
 
 ## Contributing
