@@ -1,0 +1,13 @@
+# Local Claude Code settings (never shared)
+.claude/settings.local.json
+
+# Working notes, not for the public repo
+/RESTRUCTURE_CHECKLIST.md
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
