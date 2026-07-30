@@ -2673,7 +2673,7 @@
                     artist: '',
                     date: '',
                     institution: '',
-                    rights: '',
+                    rights: img.rights || '',
                     provenance: {
                         sourceUrl: sourceUrl || '',
                         sourceLabel: provenanceLabel,
@@ -2724,7 +2724,8 @@
                         serviceId: extractServiceId(body) || imageUrl,
                         width: parseInt(body.width || canvas.width || 1000, 10) || 1000,
                         height: parseInt(body.height || canvas.height || 700, 10) || 700,
-                        profile: normalizeProfile(bodySvc?.profile)
+                        profile: normalizeProfile(bodySvc?.profile),
+                        rights: canvas.rights || body.rights || ''
                     });
                 });
             });
@@ -2759,7 +2760,8 @@
                             serviceId: serviceId || imageUrl,
                             width: parseInt(resource.width || canvas.width || 1000, 10) || 1000,
                             height: parseInt(resource.height || canvas.height || 700, 10) || 700,
-                            profile: normalizeProfile(svcObj?.profile)
+                            profile: normalizeProfile(svcObj?.profile),
+                            rights: canvas.license || resource.license || ''
                         });
                     });
                 });

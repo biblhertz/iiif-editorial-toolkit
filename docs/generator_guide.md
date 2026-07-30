@@ -109,7 +109,7 @@ See the [GitHub Pages guide](./github_pages_guide.md) for the complete publishin
 
 **From library:** Check individual items or use the group checkbox (selects all items in that group at once) in the top section, then click **Import selected**.
 
-**From manifest:** Paste a manifest URL or JSON in the lower section and click **Import into library**. The manifest is parsed (IIIF v2 and v3 are both supported), images are extracted with their labels, descriptions, and service IDs, and added to the library grouped under the source manifest. Select them for comparison from the library section above.
+**From manifest:** Paste a manifest URL or JSON in the lower section and click **Import into library**. The manifest is parsed (IIIF v2 and v3 are both supported), images are extracted with their labels, descriptions, service IDs, dimensions, image-server profile, and per-canvas rights (if the source manifest sets one — otherwise it's left blank rather than assumed), and added to the library grouped under the source manifest. Select them for comparison from the library section above.
 
 When extracting labels, the tool detects generic canvas labels (`Canvas 34`, `folio 12v`, `p. 3`) and promotes the canvas `summary` or `description` instead — useful for article figure manifests where the caption lives in the description field.
 
