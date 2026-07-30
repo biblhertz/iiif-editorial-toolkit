@@ -4399,10 +4399,13 @@
                     "items": [{
                         "id": `${baseUrl}/${mid}/page/1`, "type": "AnnotationPage",
                         "items": laLayers.map((layer, i) => {
+                            const transposed = layer.rotation === 90 || layer.rotation === 270;
+                            const bodyW = transposed ? layer.nh : layer.nw;
+                            const bodyH = transposed ? layer.nw : layer.nh;
                             const body = {
                                 "id":     `${layer.serviceId}/full/max/${layer.flipH ? '!' : ''}${layer.rotation || 0}/default.jpg`,
                                 "type":   "Image", "format": "image/jpeg",
-                                "width":  layer.nw, "height": layer.nh,
+                                "width":  bodyW, "height": bodyH,
                                 "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": layer.profile || 'level2' }]
                             };
                             if (layer.title)       body.label   = { [lang]: [layer.title] };
