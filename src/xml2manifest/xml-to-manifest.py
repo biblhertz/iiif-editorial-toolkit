@@ -91,7 +91,7 @@ def extract_and_build(xml_path: str, out_path: str, cfg: dict):
     FALLBACK_W       = cfg.get("fallback_width",  1000)
     FALLBACK_H       = cfg.get("fallback_height", 1000)
     FETCH_DELAY      = cfg.get("fetch_delay", 0.3)
-    FORCE_HTTP_HOSTS = cfg.get("force_http_hosts", [])  # e.g. ["fotothek.biblhertz.it"]
+    FORCE_HTTP_HOSTS = cfg.get("force_http_hosts", [])  # e.g. ["images.example.org"]
 
     if FORCE_HTTP_HOSTS:
         print(f"ℹ  HTTP (not HTTPS) will be used for info.json requests to: {FORCE_HTTP_HOSTS}")

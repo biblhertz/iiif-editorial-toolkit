@@ -10,6 +10,8 @@ For this reason I double checked the IIIF Multi-Image cookbook and found that th
 
 Please note that you need to know your IIIF image api link (the info.json), to be able to create a composition manifest. Also, for very complex layouts, it is faster to do a mockup in Illustrator and then insert the coordinates (xywh) of each element than hoping for a preset to fit your needs.
 
+This toolkit was also funded as part of Publink, a platform developed at the Institute — hence some in-tool references to "Publink." It lives independently, though: nothing here requires the Publink platform to use.
+
 ## Quick Start
 
 ```bash

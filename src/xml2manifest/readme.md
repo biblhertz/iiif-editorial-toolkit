@@ -45,8 +45,8 @@ Editors should only ever modify this file. The script reads all publication-spec
 
 ```json
 {
-  "manifest_id":       "https://annotation.biblhertz.it/iiif_manifests/HSAH/04/hsah_0407.json",
-  "base_canvas":       "https://annotation.biblhertz.it/iiif_manifests/HSAH/04/hsah_0407",
+  "manifest_id":       "https://your-server.example/iiif_manifests/your-article-id.json",
+  "base_canvas":       "https://your-server.example/iiif_manifests/your-article-id",
   "label_it":          "Title of the article in Italian",
   "label_en":          "Title of the article in English",
   "rights":            "https://creativecommons.org/licenses/by/4.0/",
@@ -62,13 +62,13 @@ Editors should only ever modify this file. The script reads all publication-spec
 
 | Key | Description | Example |
 |---|---|---|
-| `manifest_id` | The final public URL of the manifest file | `https://annotation.biblhertz.it/.../hsah_0407.json` |
-| `base_canvas` | Base URL used to construct canvas and annotation IDs — same as `manifest_id` without the `.json` extension | `https://annotation.biblhertz.it/.../hsah_0407` |
-| `label_it` | Manifest title in Italian | `"Cariatidi e figure di supporto..."` |
-| `label_en` | Manifest title in English | `"Caryatids and support figures..."` |
+| `manifest_id` | The final public URL of the manifest file | `https://your-server.example/.../your-article-id.json` |
+| `base_canvas` | Base URL used to construct canvas and annotation IDs — same as `manifest_id` without the `.json` extension | `https://your-server.example/.../your-article-id` |
+| `label_it` | Manifest title in Italian | `"Titolo dell'articolo..."` |
+| `label_en` | Manifest title in English | `"Article title..."` |
 | `rights` | Rights statement URI | `"https://creativecommons.org/licenses/by/4.0/"` |
-| `required_stmt_it` | Attribution text in Italian | `"Bibliotheca Hertziana..."` |
-| `required_stmt_en` | Attribution text in English | `"Bibliotheca Hertziana..."` |
+| `required_stmt_it` | Attribution text in Italian | `"Nome dell'istituzione..."` |
+| `required_stmt_en` | Attribution text in English | `"Institution name..."` |
 
 ### Optional keys
 
@@ -85,7 +85,7 @@ Editors should only ever modify this file. The script reads all publication-spec
 ## Command Line Usage
 
 ```bash
-# Minimal — reads article.xml, config from manifest_config.json, writes hsah_0407.json
+# Minimal — reads article.xml, config from manifest_config.json, writes output.json
 python xml-to-manifest.py article.xml
 
 # Explicit output filename
@@ -118,19 +118,19 @@ The script supports three `<graphic>` arrangements:
 
 **1. Hertziana standard — `<alternatives>` with `specific-use`**
 ```xml
-<fig id="nixptrg44cmk" fig-type="content-image">
-  <label>Figura 1.</label>
+<fig id="fig-001" fig-type="content-image">
+  <label>Figure 1.</label>
   <caption>
-    <title>Fra Giocondo, Cariatidi...</title>
-    <p>Fonte: Bibliotheca Hertziana
+    <title>Artist Name, Work Title...</title>
+    <p>Source: Institution Name
       <ext-link ext-link-type="uri"
-        xlink:href="http://hdl.handle.net/21.11153/cea3-cc5a-d1bc">...</ext-link>
+        xlink:href="http://hdl.handle.net/example/handle-id">...</ext-link>
     </p>
   </caption>
   <alternatives>
     <graphic specific-use="online"
-             xlink:href="https://fotothek.biblhertz.it/iiif/3/.../full/max/0/default.jpg"/>
-    <graphic specific-use="archival" xlink:href="hsah_0407_01.jpg"/>
+             xlink:href="https://iiif.example.org/image-id/full/max/0/default.jpg"/>
+    <graphic specific-use="archival" xlink:href="article-id_01.jpg"/>
   </alternatives>
 </fig>
 ```
@@ -160,7 +160,7 @@ The first `https://` URL is used; local paths are ignored.
 The output is a IIIF Presentation API 3.0 manifest with:
 
 - One **Canvas** per figure, sized to the real pixel dimensions of the image
-- **Canvas label** combining figure number and caption title: `Figura 1. — Fra Giocondo, Cariatidi...`
+- **Canvas label** combining figure number and caption title: `Figure 1. — Artist Name, Work Title...`
 - **Summary** containing the full flattened caption text
 - **Thumbnail** at 300px width via the IIIF image API
 - **`rights`** at canvas level, set from the licence URL in the caption (`creativecommons.org` or `rightsstatements.org`) when present — overrides the manifest-level default for that figure. Figures with no per-image licence inherit the manifest-level `rights` from the config.
@@ -174,11 +174,11 @@ The output is a IIIF Presentation API 3.0 manifest with:
 During execution the script prints a progress line for each figure:
 
 ```
-✓ hsah_0407_01.jp2  3456×4800
-✓ hsah_0407_02.jp2  2800×3200
-⚠ hsah_0407_03.jp2: HTTP 503 — using 1000×1000
+✓ article-id_01.jp2  3456×4800
+✓ article-id_02.jp2  2800×3200
+⚠ article-id_03.jp2: HTTP 503 — using 1000×1000
 ...
-✓ Manifest written → hsah_0407.json
+✓ Manifest written → article-id.json
   45 canvases, 0 skipped
 ```
 
@@ -228,7 +228,7 @@ To handle this, add the optional `force_http_hosts` key to your
 `manifest_config.json`:
 
 ```json
-"force_http_hosts": ["fotothek.biblhertz.it"]
+"force_http_hosts": ["images.example.org"]
 ```
 
 Any hostname listed there will be contacted over HTTP instead of HTTPS
