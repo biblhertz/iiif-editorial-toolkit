@@ -2,6 +2,8 @@
 
 A suite of self-contained, single-file HTML tools for creating, viewing, and managing IIIF (International Image Interoperability Framework) manifests in academic and scholarly contexts. Developed at the [Bibliotheca Hertziana – Max Planck Institute for Art History](https://www.biblhertz.it), Rome.
 
+**[Try the tools live](https://biblhertz.github.io/iiif-editorial-toolkit/)** — no cloning required.
+
 ## The History Behind
 
 This toolkit was created out of frustration in order to have a sensible way to generate multi-image IIIF manifests as a better solution than generating a composition in a photo editor for Art History academic digital publications. After testing what was available, I decided that what I needed was nowere to be found and started a complex jurney with the support of an artificial intelligence (Claude Sonnet 4 by Anthropic). Initially the idea was to use Openseadragon to view them and the solution provided by Claude 4 Sonnet worked, kind of. The viewer was added as a quick way to check the code, and it is a Openseadragon with multi-image enabled. The problems started with more complex layout with different vertical alignment, because the coordinates made absolutely no sense. The other problem was that those manifest were not properly displayed in Mirador, even if the manifest and the layers were correctly loaded.
