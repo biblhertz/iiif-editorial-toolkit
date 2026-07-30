@@ -4077,8 +4077,11 @@
             const maxX = Math.max(...laLayers.map(l => l.x + l.w));
             const maxY = Math.max(...laLayers.map(l => l.y + l.h));
             laLayers.forEach(l => { l.x -= minX; l.y -= minY; laPosDiv(l); });
-            laCanvasW = Math.round(maxX - minX);
-            laCanvasH = Math.round(maxY - minY);
+            // Ceil, not round: this must never shrink below the true bounding
+            // size, or a layer can end up a fraction of a pixel "outside" the
+            // very canvas that's supposed to contain it.
+            laCanvasW = Math.ceil(maxX - minX);
+            laCanvasH = Math.ceil(maxY - minY);
             laRecalcScale();
             laRenderAll();
             saveLayerSession();
@@ -4442,8 +4445,13 @@
             if (!title)         { showMessage('Enter a manifest title.', 'error'); return; }
             if (!laLayers.length) { showMessage('Add at least one layer.', 'error'); return; }
 
+            // 0.5px tolerance: target coordinates are Math.round()-ed at export
+            // anyway, so sub-pixel float drift here shouldn't trigger a warning
+            // about something that won't actually show up in the manifest.
+            const BOUNDS_EPS = 0.5;
             const outOfBounds = laLayers.some(l =>
-                l.x < 0 || l.y < 0 || l.x + l.w > laCanvasW || l.y + l.h > laCanvasH);
+                l.x < -BOUNDS_EPS || l.y < -BOUNDS_EPS ||
+                l.x + l.w > laCanvasW + BOUNDS_EPS || l.y + l.h > laCanvasH + BOUNDS_EPS);
             if (outOfBounds) {
                 showMessage('Warning: one or more layers extend outside the canvas (e.g. from rotating near an edge) — the manifest was still generated, but consider "Fit canvas to layers" first.', 'error');
             }
