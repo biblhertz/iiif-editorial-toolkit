@@ -136,7 +136,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [IIIF Community](https://iiif.io/) for standards and specifications
-- [OpenSeadragon](https://openseadragon.github.io/) for the viewer library
 - [Mirador](https://projectmirador.org/) for viewer integration
 - [TheseusViewer](https://theseusviewer.org/) for comparison viewing
 
