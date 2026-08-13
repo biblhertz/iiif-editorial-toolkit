@@ -3284,7 +3284,15 @@
                         results.push({valid: false, message: `Canvas ${ci + 1}: ${nonPainting.length} annotation(s) missing motivation: painting`});
                     annotations.forEach((ann, ai) => {
                         const body = Array.isArray(ann.body) ? ann.body[0] : ann.body;
-                        if (!body || !(body.id || body['@id']))
+                        // A SpecificResource body (e.g. carrying an ImageApiSelector for
+                        // rotation/mirror) has no id of its own — the real image is at
+                        // .source, which doesn't require its own id either.
+                        const isSpecific = body?.type === 'SpecificResource';
+                        const hasId = body && (
+                            body.id || body['@id'] ||
+                            (isSpecific && (body.source?.id || body.source?.['@id']))
+                        );
+                        if (!hasId)
                             results.push({valid: false, message: `Canvas ${ci + 1}, annotation ${ai + 1}: body missing id`});
                     });
                     if (items.length === 1 && annotations.length > 1) {
