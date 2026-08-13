@@ -500,7 +500,26 @@
                     <input type="number" id="imageHeight" placeholder="693">
                 </div>
             </div>
-            
+
+            <div class="form-row" style="align-items: flex-end;">
+                <div class="form-group">
+                    <label>Rotation &amp; mirror</label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button type="button" class="button secondary" style="padding:5px 8px;font-size:14px;" title="Rotate 90° counter-clockwise" onclick="rotateIndividualImage(-90)">↺</button>
+                        <button type="button" class="button secondary" style="padding:5px 8px;font-size:14px;" title="Rotate 90° clockwise" onclick="rotateIndividualImage(90)">↻</button>
+                        <input type="number" id="indRotation" min="0" max="359" step="1" value="0" style="width:54px;padding:4px 5px;font-size:12px;" title="Exact rotation in degrees (0–359)" onchange="setIndividualRotation(this.value)"><span style="font-size:12px;color:#555;">°</span>
+                        <button type="button" class="button secondary" id="indFlipBtn" style="padding:5px 8px;font-size:14px;" title="Mirror horizontally" onclick="flipIndividualImage()">↔</button>
+                    </div>
+                </div>
+                <div class="form-group" id="indRotationMethodGroup" style="display:none;">
+                    <label for="indRotationMethod">Rotation display method</label>
+                    <select id="indRotationMethod" onchange="updateIndividualRotationUI()">
+                        <option value="selector">ImageApiSelector (structured) — works in TheseusViewer, Annona, Clover; not Mirador</option>
+                        <option value="url">Baked into image URL — works when the image is requested directly; silently ignored by most deep-zoom viewers</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-row" style="align-items: flex-end;">
                 <div class="form-group">
                     <label for="primaryLang">Primary language</label>
@@ -601,7 +620,7 @@
                 </div>
                 <div class="form-group">
                     <label for="baseUrl">Base URL</label>
-                    <input type="url" id="baseUrl" value="https://example.org/iiif_manifests/">
+                    <input type="url" id="baseUrl" placeholder="https://example.org/iiif_manifests/">
                 </div>
             </div>
             
@@ -795,7 +814,7 @@
 
             <div class="form-group">
                 <label for="comparisonBaseUrl">Base URL</label>
-                <input type="url" id="comparisonBaseUrl" value="https://example.org/iiif_manifests/" oninput="saveComparisonSession()">
+                <input type="url" id="comparisonBaseUrl" placeholder="https://example.org/iiif_manifests/" oninput="saveComparisonSession()">
             </div>
 
             <button class="button" onclick="generateComparisonManifest()">Create comparison manifest</button>
@@ -1039,6 +1058,13 @@
             <div class="form-group">
                 <label for="laBaseUrl">Base URL</label>
                 <input type="url" id="laBaseUrl" placeholder="https://username.github.io/iiif-manifests/" oninput="saveLayerSession()">
+            </div>
+            <div class="form-group">
+                <label for="laRotationMethod">Rotation display method <span style="font-size:11px;color:#7f8c8d;font-weight:normal;">(only affects layers that are actually rotated/mirrored)</span></label>
+                <select id="laRotationMethod" onchange="saveLayerSession()">
+                    <option value="selector">ImageApiSelector (structured) — for a multi-layer canvas like this, confirmed working only in a patched Tify fork so far; Mirador, Annona, TheseusViewer and Clover all fail differently on multiple rotated layers composited together</option>
+                    <option value="url">Baked into image URL — works when the image is requested directly; silently ignored by every deep-zoom viewer tested</option>
+                </select>
             </div>
             <button class="button" onclick="laGenerate()">Generate manifest</button>
             <button class="button secondary" onclick="laClearWorkspace()">Clear workspace</button>
@@ -1498,6 +1524,36 @@
             }
         }
         
+        function rotateIndividualImage(delta) {
+            const input = document.getElementById('indRotation');
+            const next = ((parseInt(input.value) || 0) + delta + 360) % 360;
+            input.value = next;
+            updateIndividualRotationUI();
+        }
+
+        function setIndividualRotation(value) {
+            const degrees = ((parseInt(value) || 0) % 360 + 360) % 360;
+            document.getElementById('indRotation').value = degrees;
+            updateIndividualRotationUI();
+        }
+
+        function flipIndividualImage() {
+            const btn = document.getElementById('indFlipBtn');
+            btn.classList.toggle('-active');
+            btn.style.background = btn.classList.contains('-active') ? '#ddeeff' : '';
+            updateIndividualRotationUI();
+        }
+
+        function individualHasTransform() {
+            const rotation = parseInt(document.getElementById('indRotation').value) || 0;
+            const flipped = document.getElementById('indFlipBtn').classList.contains('-active');
+            return rotation !== 0 || flipped;
+        }
+
+        function updateIndividualRotationUI() {
+            document.getElementById('indRotationMethodGroup').style.display = individualHasTransform() ? 'block' : 'none';
+        }
+
         // Generate individual manifest
         function generateIndividualManifest() {
             const imageUrl = document.getElementById('imageUrl').value;
@@ -1521,17 +1577,28 @@
 
             const width = parseInt(document.getElementById('imageWidth').value) || 1000;
             const height = parseInt(document.getElementById('imageHeight').value) || 693;
-            
+            const rotation = parseInt(document.getElementById('indRotation').value) || 0;
+            const flipped = document.getElementById('indFlipBtn').classList.contains('-active');
+            const rotationMethod = document.getElementById('indRotationMethod').value;
+            const hasTransform = rotation !== 0 || flipped;
+
+            // Canvas dimensions must reflect the rotated bounding box, not the
+            // image's native size, once a rotation is set — otherwise the
+            // canvas' aspect ratio wouldn't match what's actually displayed.
+            const bounds = hasTransform ? rotatedBounds(width, height, rotation) : { w: width, h: height };
+
             let canvasWidth, canvasHeight;
-            if (width > height) {
-                canvasWidth = Math.min(width, 800);
-                canvasHeight = Math.round(height * (canvasWidth / width));
+            if (bounds.w > bounds.h) {
+                canvasWidth = Math.min(bounds.w, 800);
+                canvasHeight = Math.round(bounds.h * (canvasWidth / bounds.w));
             } else {
-                canvasHeight = Math.min(height, 800);
-                canvasWidth = Math.round(width * (canvasHeight / height));
+                canvasHeight = Math.min(bounds.h, 800);
+                canvasWidth = Math.round(bounds.w * (canvasHeight / bounds.h));
             }
-            
-            const manifestBase = `${document.getElementById('baseUrl').value.replace(/\/$/, '')}/${manifestId}`;
+            canvasWidth = Math.round(canvasWidth);
+
+            const baseUrlValue = document.getElementById('baseUrl').value.trim() || 'https://example.org/iiif_manifests';
+            const manifestBase = `${baseUrlValue.replace(/\/$/, '')}/${manifestId}`;
             const secondLang    = individualSecondLangVisible ? secondaryLang    : '';
             const secondTitle   = individualSecondLangVisible ? titleSecondary   : '';
             const secondSummary = individualSecondLangVisible ? summarySecondary : '';
@@ -1555,6 +1622,64 @@
             });
             if (metadataEntries.length) manifest.metadata = metadataEntries;
 
+            const rotationSegment = flipped ? `!${rotation}` : String(rotation);
+
+            let body;
+            if (!hasTransform) {
+                body = {
+                    "id": imageUrl,
+                    "type": "Image",
+                    "format": "image/jpeg",
+                    "width": width,
+                    "height": height,
+                    "service": [{
+                        "id": imageService,
+                        "type": "ImageService3",
+                        "profile": currentImageProfile
+                    }]
+                };
+            } else if (rotationMethod === 'url') {
+                // Baked into the request URL. Works when the image is fetched
+                // directly; most deep-zoom viewers build their own tile requests
+                // from `service` (which carries no rotation) and silently ignore it.
+                body = {
+                    "id": `${imageService}/full/max/${rotationSegment}/default.jpg`,
+                    "type": "Image",
+                    "format": "image/jpeg",
+                    "width": width,
+                    "height": height,
+                    "service": [{
+                        "id": imageService,
+                        "type": "ImageService3",
+                        "profile": currentImageProfile
+                    }]
+                };
+            } else {
+                // ImageApiSelector (IIIF Registry of Selectors): rotation/mirror as
+                // structured data on a SpecificResource, rather than baked into the
+                // request URL. `source` stays the canonical, unrotated image;
+                // `selector.rotation` is always a string, mirror via a leading "!".
+                body = {
+                    "type": "SpecificResource",
+                    "source": {
+                        "id": `${imageService}/full/max/0/default.jpg`,
+                        "type": "Image",
+                        "format": "image/jpeg",
+                        "width": width,
+                        "height": height,
+                        "service": [{
+                            "id": imageService,
+                            "type": "ImageService3",
+                            "profile": currentImageProfile
+                        }]
+                    },
+                    "selector": {
+                        "type": "ImageApiSelector",
+                        "rotation": rotationSegment
+                    }
+                };
+            }
+
             manifest.items = [{
                 "id": `${manifestBase}/canvas/1`,
                 "type": "Canvas",
@@ -1569,22 +1694,11 @@
                         "type": "Annotation",
                         "motivation": "painting",
                         "target": `${manifestBase}/canvas/1`,
-                        "body": {
-                            "id": imageUrl,
-                            "type": "Image",
-                            "format": "image/jpeg",
-                            "width": width,
-                            "height": height,
-                            "service": [{
-                                "id": imageService,
-                                "type": "ImageService3",
-                                "profile": currentImageProfile
-                            }]
-                        }
+                        "body": body
                     }]
                 }],
                 "thumbnail": [{
-                    "id": `${imageService}/full/300,/0/default.jpg`,
+                    "id": `${imageService}/full/300,/${rotationSegment}/default.jpg`,
                     "type": "Image",
                     "format": "image/jpeg"
                 }]
@@ -1607,7 +1721,10 @@
                     serviceId: imageService,
                     width: width,
                     height: height,
-                    profile: currentImageProfile
+                    profile: currentImageProfile,
+                    rotation: rotation,
+                    flipH: flipped,
+                    rotationMethod: rotationMethod
                 }
             };
             
@@ -2006,7 +2123,7 @@
             const manifestId = `comparison-${viewer}-${Date.now()}`;
             const canvasWidth = 1600;
             const canvasHeight = 700;
-            const baseUrl = document.getElementById('comparisonBaseUrl').value.replace(/\/$/, '');
+            const baseUrl = (document.getElementById('comparisonBaseUrl').value.trim() || 'https://example.org/iiif_manifests').replace(/\/$/, '');
 
             const manifest = {
                 "@context": ["http://iiif.io/api/presentation/3/context.json"],
@@ -2205,12 +2322,66 @@
             }
 
             const canvasLabel = m.label || { none: [m.title || 'Image'] };
+            const mWidth  = m.width  || 1000;
+            const mHeight = m.height || 700;
+            const mRotation = m.rotation || 0;
+            const mFlipped  = !!m.flipH;
+            const mHasTransform = mRotation !== 0 || mFlipped;
+            const mRotationSegment = mFlipped ? `!${mRotation}` : String(mRotation);
+            const mBounds = mHasTransform ? rotatedBounds(mWidth, mHeight, mRotation) : { w: mWidth, h: mHeight };
+
+            let mCanvasWidth, mCanvasHeight;
+            if (mBounds.w > mBounds.h) {
+                mCanvasWidth = Math.round(Math.min(mBounds.w, 800));
+                mCanvasHeight = Math.round(mBounds.h * (mCanvasWidth / mBounds.w));
+            } else {
+                mCanvasHeight = Math.round(Math.min(mBounds.h, 800));
+                mCanvasWidth = Math.round(mBounds.w * (mCanvasHeight / mBounds.h));
+            }
+
+            let mBody;
+            if (!mHasTransform) {
+                mBody = {
+                    "id":      m.imageUrl,
+                    "type":    "Image",
+                    "format":  "image/jpeg",
+                    "width":   mWidth,
+                    "height":  mHeight,
+                    "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": m.profile || 'level2' }]
+                };
+            } else if (m.rotationMethod === 'url') {
+                mBody = {
+                    "id":      `${m.serviceId}/full/max/${mRotationSegment}/default.jpg`,
+                    "type":    "Image",
+                    "format":  "image/jpeg",
+                    "width":   mWidth,
+                    "height":  mHeight,
+                    "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": m.profile || 'level2' }]
+                };
+            } else {
+                mBody = {
+                    "type": "SpecificResource",
+                    "source": {
+                        "id":      `${m.serviceId}/full/max/0/default.jpg`,
+                        "type":    "Image",
+                        "format":  "image/jpeg",
+                        "width":   mWidth,
+                        "height":  mHeight,
+                        "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": m.profile || 'level2' }]
+                    },
+                    "selector": {
+                        "type": "ImageApiSelector",
+                        "rotation": mRotationSegment
+                    }
+                };
+            }
+
             manifest.items = [{
                 "id":     `${baseUrl}/${manifestId}/canvas/1`,
                 "type":   "Canvas",
                 "label":  canvasLabel,
-                "width":  m.width  || 1000,
-                "height": m.height || 700,
+                "width":  mCanvasWidth,
+                "height": mCanvasHeight,
                 "items": [{
                     "id":   `${baseUrl}/${manifestId}/page/1`,
                     "type": "AnnotationPage",
@@ -2219,17 +2390,10 @@
                         "type":       "Annotation",
                         "motivation": "painting",
                         "target":     `${baseUrl}/${manifestId}/canvas/1`,
-                        "body": {
-                            "id":      m.imageUrl,
-                            "type":    "Image",
-                            "format":  "image/jpeg",
-                            "width":   m.width  || 1000,
-                            "height":  m.height || 700,
-                            "service": [{ "id": m.serviceId, "type": "ImageService3", "profile": m.profile || 'level2' }]
-                        }
+                        "body": mBody
                     }]
                 }],
-                "thumbnail": [{ "id": `${m.serviceId}/full/300,/0/default.jpg`, "type": "Image", "format": "image/jpeg" }]
+                "thumbnail": [{ "id": `${m.serviceId}/full/300,/${mRotationSegment}/default.jpg`, "type": "Image", "format": "image/jpeg" }]
             }];
 
             return JSON.stringify(manifest, null, 2);
@@ -2693,7 +2857,10 @@
                     serviceId: img.serviceId,
                     width: img.width,
                     height: img.height,
-                    profile: img.profile || 'level2'
+                    profile: img.profile || 'level2',
+                    rotation: img.rotation || 0,
+                    flipH: !!img.flipH,
+                    rotationMethod: img.rotationMethod || 'selector'
                 }
             }));
         }
@@ -2703,6 +2870,17 @@
             const ctx = manifest['@context'] || '';
             const isV2 = (typeof ctx === 'string' ? ctx : ctx.join?.(' ') ?? '').includes('presentation/2');
             return isV2 ? extractImagesV2(manifest) : extractImagesV3(manifest);
+        }
+
+        // Plain (non-selector) bodies may still have rotation/mirror baked into the
+        // request URL itself (…/{region}/{size}/{rotation}/{quality}.{format}) —
+        // detect it on import so re-exporting later doesn't silently drop it.
+        function detectBakedRotation(imageUrl) {
+            const match = imageUrl.match(/\/(!?[\d.]+)\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/);
+            if (!match) return { rotation: 0, flipH: false, rotationMethod: null };
+            const flipH = match[1].startsWith('!');
+            const rotation = parseFloat(flipH ? match[1].slice(1) : match[1]) || 0;
+            return { rotation, flipH, rotationMethod: (rotation !== 0 || flipH) ? 'url' : null };
         }
 
         function extractImagesV3(manifest) {
@@ -2718,14 +2896,33 @@
 
                 annotations.forEach(annotation => {
                     if (!annotation || annotation.type !== 'Annotation') return;
-                    const body = Array.isArray(annotation.body) ? annotation.body[0] : annotation.body;
-                    if (!body) return;
+                    const rawBody = Array.isArray(annotation.body) ? annotation.body[0] : annotation.body;
+                    if (!rawBody) return;
+
+                    // Unwrap a SpecificResource + ImageApiSelector body (rotation/mirror
+                    // as structured data rather than baked into the request URL) — the
+                    // real image lives at body.source, not body itself.
+                    const isSpecific = rawBody.type === 'SpecificResource';
+                    const body = isSpecific ? (rawBody.source || {}) : rawBody;
+                    const selector = isSpecific && rawBody.selector?.type === 'ImageApiSelector' ? rawBody.selector : null;
+
                     const imageUrl = body.id || body['@id'];
                     if (!imageUrl) return;
-                    const annLabel = getLabelText(annotation.label) || getLabelText(body.label);
+                    const annLabel = getLabelText(annotation.label) || getLabelText(rawBody.label) || getLabelText(body.label);
                     // If the canvas label is generic ("Canvas 34"), prefer the summary/description as title
                     const title = annLabel || (isGenericLabel(canvasLabel) && canvasSummary ? canvasSummary : canvasLabel);
                     const bodySvc = Array.isArray(body.service) ? body.service[0] : body.service;
+
+                    let rotation = 0, flipH = false, rotationMethod = null;
+                    if (selector) {
+                        const rotationValue = String(selector.rotation ?? '0');
+                        flipH = rotationValue.startsWith('!');
+                        rotation = parseFloat(flipH ? rotationValue.slice(1) : rotationValue) || 0;
+                        rotationMethod = 'selector';
+                    } else {
+                        ({ rotation, flipH, rotationMethod } = detectBakedRotation(imageUrl));
+                    }
+
                     images.push({
                         id: annotation.id || `${canvas.id || 'canvas'}-${images.length + 1}`,
                         title,
@@ -2735,7 +2932,10 @@
                         width: parseInt(body.width || canvas.width || 1000, 10) || 1000,
                         height: parseInt(body.height || canvas.height || 700, 10) || 700,
                         profile: normalizeProfile(bodySvc?.profile),
-                        rights: canvas.rights || body.rights || ''
+                        rights: canvas.rights || rawBody.rights || body.rights || '',
+                        rotation,
+                        flipH,
+                        rotationMethod
                     });
                 });
             });
@@ -2762,6 +2962,7 @@
                         const annLabel = getLabelText(ann.label);
                         const title = annLabel || (isGenericLabel(canvasLabel) && canvasDesc ? canvasDesc : canvasLabel);
                         const svcObj = Array.isArray(svc) ? svc[0] : svc;
+                        const { rotation, flipH, rotationMethod } = detectBakedRotation(imageUrl);
                         images.push({
                             id: ann['@id'] || canvas['@id'] || `canvas-${images.length + 1}`,
                             title,
@@ -2771,7 +2972,10 @@
                             width: parseInt(resource.width || canvas.width || 1000, 10) || 1000,
                             height: parseInt(resource.height || canvas.height || 700, 10) || 700,
                             profile: normalizeProfile(svcObj?.profile),
-                            rights: canvas.license || resource.license || ''
+                            rights: canvas.license || resource.license || '',
+                            rotation,
+                            flipH,
+                            rotationMethod
                         });
                     });
                 });
@@ -3183,6 +3387,12 @@
             document.getElementById('rightsLicense').value = '';
             document.getElementById('rightsCustom').value = '';
             document.getElementById('indRightsCustomGroup').style.display = 'none';
+            document.getElementById('indRotation').value = 0;
+            const flipBtn = document.getElementById('indFlipBtn');
+            flipBtn.classList.remove('-active');
+            flipBtn.style.background = '';
+            document.getElementById('indRotationMethod').value = 'selector';
+            document.getElementById('indRotationMethodGroup').style.display = 'none';
             currentIndividualManifest = null;
         }
         
@@ -3794,7 +4004,8 @@
                 laCreateLayer(m.serviceId, m.width, m.height, {
                     title: m.title, description: m.description || '',
                     date: m.date || '', institution: m.institution || '', rights: m.rights || '',
-                    profile: m.profile || 'level2'
+                    profile: m.profile || 'level2',
+                    rotation: m.rotation || 0, flipH: !!m.flipH
                 });
             });
             laLibSelected.clear();
@@ -3941,8 +4152,11 @@
         // ── Layer creation & operations ───────────────────────────────────
         function laCreateLayer(serviceId, nw, nh, meta) {
             laPushUndo();
+            const rotation = meta?.rotation || 0;
+            const flipH = !!meta?.flipH;
+            const bounds = rotation ? rotatedBounds(nw, nh, rotation) : { w: nw, h: nh };
             const isFirst = laLayers.length === 0;
-            if (isFirst) { laCanvasW = nw; laCanvasH = nh; laRecalcScale(); }
+            if (isFirst) { laCanvasW = Math.round(bounds.w); laCanvasH = Math.round(bounds.h); laRecalcScale(); }
             const id = Math.random().toString(36).slice(2, 9);
             laLayers.push({
                 id, serviceId,
@@ -3954,9 +4168,9 @@
                 profile:     meta?.profile     || 'level2',
                 nw, nh,
                 x: 0, y: 0,
-                w: isFirst ? laCanvasW : nw,
-                h: isFirst ? laCanvasH : nh,
-                opacity: 1, visible: true, rotation: 0, flipH: false
+                w: isFirst ? laCanvasW : bounds.w,
+                h: isFirst ? laCanvasH : bounds.h,
+                opacity: 1, visible: true, rotation, flipH
             });
             laSelectedId = laLayers[laLayers.length - 1].id;
             laRenderAll();
@@ -4464,6 +4678,7 @@
 
             const mid      = `layered-${Date.now()}`;
             const canvasId = `${baseUrl}/${mid}/canvas/1`;
+            const rotationMethod = document.getElementById('laRotationMethod').value;
 
             const manifest = {
                 "@context": ["http://iiif.io/api/presentation/3/context.json"],
@@ -4476,15 +4691,39 @@
                     "items": [{
                         "id": `${baseUrl}/${mid}/page/1`, "type": "AnnotationPage",
                         "items": laLayers.map((layer, i) => {
-                            const nativeBounds = rotatedBounds(layer.nw, layer.nh, layer.rotation || 0);
+                            const rotation = layer.rotation || 0;
+                            const flipped = !!layer.flipH;
+                            const hasTransform = rotation !== 0 || flipped;
+                            const rotationSegment = flipped ? `!${rotation}` : String(rotation);
+                            const nativeBounds = rotatedBounds(layer.nw, layer.nh, rotation);
                             const bodyW = Math.round(nativeBounds.w);
                             const bodyH = Math.round(nativeBounds.h);
-                            const body = {
-                                "id":     `${layer.serviceId}/full/max/${layer.flipH ? '!' : ''}${layer.rotation || 0}/default.jpg`,
-                                "type":   "Image", "format": "image/jpeg",
-                                "width":  bodyW, "height": bodyH,
-                                "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": layer.profile || 'level2' }]
-                            };
+
+                            let body;
+                            if (hasTransform && rotationMethod === 'selector') {
+                                // ImageApiSelector: `source` stays the canonical, unrotated
+                                // image (native nw/nh); the rotated bounding box (bodyW/bodyH)
+                                // still describes the annotation's own display size, same as
+                                // the baked-in-URL body below, so positioning/xywh math is
+                                // unaffected by which method is chosen.
+                                body = {
+                                    "type": "SpecificResource",
+                                    "source": {
+                                        "id":      `${layer.serviceId}/full/max/0/default.jpg`,
+                                        "type":    "Image", "format": "image/jpeg",
+                                        "width":   layer.nw, "height": layer.nh,
+                                        "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": layer.profile || 'level2' }]
+                                    },
+                                    "selector": { "type": "ImageApiSelector", "rotation": rotationSegment }
+                                };
+                            } else {
+                                body = {
+                                    "id":     `${layer.serviceId}/full/max/${rotationSegment}/default.jpg`,
+                                    "type":   "Image", "format": "image/jpeg",
+                                    "width":  bodyW, "height": bodyH,
+                                    "service": [{ "id": layer.serviceId, "type": "ImageService3", "profile": layer.profile || 'level2' }]
+                                };
+                            }
                             if (layer.title)       body.label   = { [lang]: [layer.title] };
                             if (layer.description) body.summary = { [lang]: [layer.description] };
                             if (layer.rights)      body.rights  = layer.rights;
