@@ -129,6 +129,10 @@ A standalone, no-network local tool that generates paired JATS `<graphic>` block
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+## Funding
+
+This toolkit was developed at the Bibliotheca Hertziana as part of the Publink platform, made possible by a grant from the Deutsche Forschungsgemeinschaft (DFG) — Project number [501142032](https://gepris.dfg.de/gepris/projekt/501142032).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
