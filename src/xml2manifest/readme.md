@@ -27,29 +27,29 @@ The pipeline consists of three files:
 
 ## Quick Start
 
-1. Place `xml-to-manifest.py` and `manifest_config.json` in the same folder as your XML file.
-2. Edit `manifest_config.json` with the correct values for your article (see Configuration below).
+1. Place `xml-to-manifest.py` and `manifest_config.json` in the same folder as your XML file(s).
+2. Edit `manifest_config.json` with the correct values for your volume/journal (see Configuration below).
 3. Open a terminal in that folder and run:
 
 ```bash
+# One article
 python xml-to-manifest.py article.xml output.json
-```
 
-The manifest will be written to `output.json`, ready for upload.
+# A whole volume — every article XML in a folder, one manifest per article out
+python xml-to-manifest.py volume_folder/ output_folder/
+```
 
 ---
 
 ## Configuration (`manifest_config.json`)
 
-Editors should only ever modify this file. The script reads all publication-specific values from here.
+Editors should only ever modify this file. Per-article values (manifest URL, canvas base, title) are auto-derived from each XML file — the config holds only what's shared across a whole volume/journal plus the base URL pattern.
 
 ```json
 {
-  "manifest_id":       "https://your-server.example/iiif_manifests/your-article-id.json",
-  "base_canvas":       "https://your-server.example/iiif_manifests/your-article-id",
-  "label_it":          "Title of the article in Italian",
-  "label_en":          "Title of the article in English",
-  "rights":            "https://creativecommons.org/licenses/by/4.0/",
+  "base_url":          "https://your-server.example/iiif_manifests",
+  "primary_lang":      "it",
+  "rights":            "http://creativecommons.org/licenses/by/4.0/",
   "required_stmt_it":  "Name of the institution (Italian)",
   "required_stmt_en":  "Name of the institution (English)",
   "fetch_delay":       0.3,
@@ -62,38 +62,62 @@ Editors should only ever modify this file. The script reads all publication-spec
 
 | Key | Description | Example |
 |---|---|---|
-| `manifest_id` | The final public URL of the manifest file | `https://your-server.example/.../your-article-id.json` |
-| `base_canvas` | Base URL used to construct canvas and annotation IDs — same as `manifest_id` without the `.json` extension | `https://your-server.example/.../your-article-id` |
-| `label_it` | Manifest title in Italian | `"Titolo dell'articolo..."` |
-| `label_en` | Manifest title in English | `"Article title..."` |
-| `rights` | Rights statement URI | `"https://creativecommons.org/licenses/by/4.0/"` |
+| `rights` | Rights statement URI. `creativecommons.org`/`rightsstatements.org` URIs are normalized to `http://` automatically (IIIF's recognized rights vocabularies are canonically `http://`, even though the sites redirect to https) — paste either scheme, the output is always correct. | `"http://creativecommons.org/licenses/by/4.0/"` |
 | `required_stmt_it` | Attribution text in Italian | `"Nome dell'istituzione..."` |
 | `required_stmt_en` | Attribution text in English | `"Institution name..."` |
+| `base_url` | Base URL manifests are published under — used to derive each article's `manifest_id`/`base_canvas` from its filename. Not needed if you provide `manifest_id`/`base_canvas` explicitly (single-article mode only). | `"https://your-server.example/iiif_manifests"` |
 
 ### Optional keys
 
 | Key | Default | Description |
 |---|---|---|
+| `primary_lang` | `"it"` | Language code the auto-derived `<article-title>` is filed under |
 | `fetch_delay` | `0.3` | Seconds to wait between `info.json` requests. Increase if the server rate-limits. |
 | `fallback_width` | `1000` | Canvas width used if `info.json` cannot be reached |
 | `fallback_height` | `1000` | Canvas height used if `info.json` cannot be reached |
 
+### Manual overrides (single-article mode only)
+
+Set these to bypass auto-derivation for one article — e.g. a one-off manifest that doesn't follow the volume's usual URL/filename pattern:
+
+| Key | Description |
+|---|---|
+| `manifest_id` | Explicit public URL of the manifest file (must be paired with `base_canvas`) |
+| `base_canvas` | Explicit base URL for canvas/annotation IDs (must be paired with `manifest_id`) |
+| `label_it` | Manifest title in Italian, used verbatim instead of the JATS title |
+| `label_en` | Manifest title in English, used verbatim instead of the JATS title |
+
 > **Note:** If any required key is missing the script will exit immediately with a clear error message before making any network requests.
+
+---
+
+## Auto-derivation
+
+Per article, unless overridden above:
+
+- **`manifest_id` / `base_canvas`** — built from `base_url` + the XML filename stem, e.g. `article-042.xml` → `{base_url}/article-042.json` and `{base_url}/article-042`. This means the XML filename *is* the manifest slug — rename the file if you need a different published URL.
+- **`label`** — taken from `<title-group><article-title>`, filed under `primary_lang` — unless the article's own root declares `<article xml:lang="…">`, which wins over the config default (e.g. one French article in an otherwise English volume gets filed under `fr`, not `en`). A second language is added **only** if the JATS file itself carries a `<trans-title-group xml:lang="…"><trans-title>` — no title is ever duplicated into a language that isn't actually present in the source. So a genuinely bilingual article gets a bilingual label automatically; a monolingual one gets a single-language label, not a fabricated second one.
 
 ---
 
 ## Command Line Usage
 
 ```bash
-# Minimal — reads article.xml, config from manifest_config.json, writes output.json
+# Single article — minimal
 python xml-to-manifest.py article.xml
 
-# Explicit output filename
+# Single article — explicit output filename
 python xml-to-manifest.py article.xml my_output.json
 
-# Custom config file (e.g. for a different journal or institution)
+# Single article — custom config file (e.g. for a different journal or institution)
 python xml-to-manifest.py article.xml my_output.json my_config.json
+
+# Whole volume — one XML per article in a folder, one manifest per article out
+python xml-to-manifest.py volume_folder/ output_folder/
+python xml-to-manifest.py volume_folder/ output_folder/ my_config.json
 ```
+
+Batch mode processes every `.xml` file in the folder. Files with no `<body>` (e.g. a `volume-meta.xml`) are recognized as non-articles and skipped automatically; files with a `<body>` but no derivable title are reported and skipped rather than aborting the run. An article that produces zero canvases — no `<fig>` elements at all, or figures with no usable online image URL — is also reported and **no manifest file is written for it**, in either single-article or batch mode; an empty manifest isn't a useful output.
 
 ---
 
