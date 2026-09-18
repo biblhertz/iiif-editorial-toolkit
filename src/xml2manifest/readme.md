@@ -7,11 +7,12 @@
 
 This pipeline converts a JATS XML article file into a IIIF Presentation API 3.0 manifest in a single automated pass. It is designed for use with articles published by the Bibliotheca Hertziana and compatible institutions whose images are served from a IIIF image server.
 
-The pipeline consists of three files:
+The pipeline consists of four files:
 
 | File | Role |
 |---|---|
-| `xml-to-manifest.py` | Main script — do not edit |
+| `xml-to-manifest.py` | Main script — generates the manifest — do not edit |
+| `add-manifest-links.py` | Second script — links a generated (and uploaded) manifest back into the article XML — do not edit |
 | `manifest_config.json` | Configuration — editors set values here |
 | `fig-extractor.py` | Optional audit tool — exports a CSV of all figures |
 
@@ -27,7 +28,7 @@ The pipeline consists of three files:
 
 ## Quick Start
 
-1. Place `xml-to-manifest.py` and `manifest_config.json` in the same folder as your XML file(s).
+1. Place `xml-to-manifest.py`, `add-manifest-links.py`, and `manifest_config.json` in the same folder as your XML file(s).
 2. Edit `manifest_config.json` with the correct values for your volume/journal (see Configuration below).
 3. Open a terminal in that folder and run:
 
@@ -37,6 +38,13 @@ python xml-to-manifest.py article.xml output.json
 
 # A whole volume — every article XML in a folder, one manifest per article out
 python xml-to-manifest.py volume_folder/ output_folder/
+```
+
+4. **Upload the generated manifest(s) to the manifest server.** This step is manual — the script only writes local files, it doesn't publish them anywhere.
+5. Once a manifest is live at its public URL, run `add-manifest-links.py` to write the matching `<object-id>`/`<custom-meta>` markers back into the article XML (see below) — without this step the manifest exists but nothing in the article points to it, so no viewer link ever appears.
+
+```bash
+python add-manifest-links.py article.xml output.json
 ```
 
 ---
@@ -118,6 +126,73 @@ python xml-to-manifest.py volume_folder/ output_folder/ my_config.json
 ```
 
 Batch mode processes every `.xml` file in the folder. Files with no `<body>` (e.g. a `volume-meta.xml`) are recognized as non-articles and skipped automatically; files with a `<body>` but no derivable title are reported and skipped rather than aborting the run. An article that produces zero canvases — no `<fig>` elements at all, or figures with no usable online image URL — is also reported and **no manifest file is written for it**, in either single-article or batch mode; an empty manifest isn't a useful output.
+
+---
+
+## Linking a Manifest Back Into the Article (`add-manifest-links.py`)
+
+`xml-to-manifest.py` only ever produces a manifest file — it never touches the article XML. **The article has no working image viewer until this second step is run**, because nothing in the JATS source points at the manifest yet. Run this *after* the manifest has been uploaded and is reachable at its real public URL — the script fetches nothing itself, but a stale/not-yet-uploaded manifest file will get linked in just as easily as a live one, so double-check the upload first.
+
+### What it writes into the XML
+
+Two things, both automatically, matching what `xml-to-manifest.py` actually built:
+
+1. **One shared, article-level manifest reference** in the front matter:
+   ```xml
+   <custom-meta-group>
+     <custom-meta>
+       <meta-name>iiif-manifest</meta-name>
+       <meta-value>https://your-server.example/iiif_manifests/article-042.json</meta-value>
+     </custom-meta>
+   </custom-meta-group>
+   ```
+2. **A canvas marker on every `<fig>` that actually got a canvas**, as that figure's first child:
+   ```xml
+   <fig id="fig-001" fig-type="content-image">
+     <object-id pub-id-type="iiif-canvas">1</object-id>
+     <label>Figure 1.</label>
+     ...
+   ```
+   `N` is that figure's 1-based position among the manifest's own canvases — not a raw figure count. Figures the manifest generator skipped (no online image URL) correctly get no marker at all and just display as plain, non-interactive thumbnails; nothing to do for those.
+
+### Usage
+
+```bash
+# Single article
+python add-manifest-links.py article.xml manifest.json
+
+# Single article, write to a different file instead of overwriting
+python add-manifest-links.py article.xml manifest.json -o linked.xml
+
+# Whole volume — matches article.xml <-> manifests_folder/article.json by filename stem
+python add-manifest-links.py volume_folder/ manifests_folder/
+```
+
+### Safety: it checks its own work
+
+Before writing anything, the script matches each figure to its expected canvas by **id**, not just position — every canvas id in the manifest is `{base_canvas}/canvas/{fig_id}`, so the script confirms the Nth linkable figure's own `id` attribute actually appears in the Nth canvas id before writing the marker. If a figure was added, removed, or reordered in the XML after the manifest was generated, this mismatch is reported as an error instead of silently linking a figure to the wrong image:
+
+```
+✗ canvas order mismatch on fig id='fig-014' in article-042.xml: expected canvas 6
+  to be '.../canvas/fig-014', got '.../canvas/fig-015' — figs and manifest are
+  out of sync, regenerate the manifest before linking
+```
+
+If this happens, regenerate the manifest from the current XML first, then re-run the linker.
+
+### Re-running safely
+
+The script only touches figures that aren't already linked, so running it again after the first pass (nothing changed) does nothing:
+
+```
+✓ article.xml: linked 0 new fig(s) to manifest.json (4 canvases total) → article.xml
+```
+
+If a figure genuinely needs relinking — e.g. after regenerating the manifest because a figure was added or removed — pass `--force` to strip every existing `iiif-canvas` marker and relink from scratch:
+
+```bash
+python add-manifest-links.py article.xml manifest.json --force
+```
 
 ---
 
@@ -289,3 +364,12 @@ The `info.json` fetch failed for that image — network issue, server downtime, 
 
 **Manifest loads in viewer but images are blank**
 The IIIF service URL is correct but the image server requires authentication or is not publicly accessible. Verify the image is publicly reachable by opening the `online_url` value directly in a browser.
+
+**Article page shows plain thumbnails, no interactive viewer**
+The manifest was generated (and maybe even uploaded) but `add-manifest-links.py` was never run against this article, so nothing in the XML points at it. Run the linker (see above).
+
+**`add-manifest-links.py` reports a "canvas order mismatch"**
+The article XML has changed (a figure added, removed, or reordered) since the manifest currently linked to it was generated. Regenerate the manifest from the current XML with `xml-to-manifest.py`, then re-run `add-manifest-links.py`.
+
+**`add-manifest-links.py` reports "more figs with online images than canvases"**
+The XML now has more linkable figures than the manifest has canvases — same root cause as above (XML changed after the manifest was generated). Regenerate the manifest first.
